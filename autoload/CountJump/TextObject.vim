@@ -11,6 +11,7 @@
 "	001	14-Feb-2009	Renamed from 'custommotion.vim' to
 "				'CountJump.vim' and split off motion and
 "				text object parts. 
+"				file creation
 
 function! s:Escape( argumentText )
     return substitute(a:argumentText, "'", "''", 'g')
@@ -40,6 +41,8 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( isInner, selectionMo
     let l:count = v:count1
     let l:isExclusive = (&selection ==# 'exclusive')
     let l:isLinewise = (a:selectionMode ==# 'V')
+    let l:save_view = winsaveview()
+    let [l:cursorLine, l:cursorCol] = [line('.'), col('.')] 
 
     let l:save_whichwrap = &whichwrap
     set whichwrap+=h,l
@@ -53,7 +56,16 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( isInner, selectionMo
 		endif
 	    endif
 	    execute 'normal!' a:selectionMode
-	    if call(a:JumpToEnd, [l:count, a:isInner])
+	    let l:isFoundEnd = call(a:JumpToEnd, [l:count, a:isInner])
+	    if ! l:isFoundEnd || line('.') < l:cursorLine || (line('.') == l:cursorLine && col('.') < l:cursorCol)
+		" The end has not been found or is located before the original
+		" cursor position; abort and beep. 
+		" Note: We need one additional <Esc> to cancel visual mode in
+		" case an end has been found. 
+		execute "normal! \<Esc>" . (l:isFoundEnd ? "\<Esc>" : '')
+		call winrestview(l:save_view)
+		execute 'normal!' a:selectionMode
+	    else
 		if l:isLinewise && a:isInner
 		    normal! k
 		else
