@@ -216,8 +216,10 @@ function! CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, type
     let l:functionToBeginName = printf('%sJumpToBegin_%s', l:scope, a:textObjectKey)
     let l:functionToEndName   = printf('%sJumpToEnd_%s', l:scope, a:textObjectKey)
 
-    execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW' . (a:isInner ? 'e' : '')])\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin))
-    execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'cW'  . (a:isInner ? '' : 'e')])\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd))
+    "execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW' . (a:isInner ? 'e' : '')])\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin))
+    execute printf("function! %s( count, isInner )\nif a:isInner\nreturn (CountJump#CountSearch(a:count, ['%s', 'bcW']) ? CountJump#CountSearch(1, ['%s', 'ceW']) : 0)\nelse\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW'])\nendif\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin), s:Escape(a:patternToBegin), s:Escape(a:patternToBegin))
+    "execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'cW'  . (a:isInner ? '' : 'e')])\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd))
+    execute printf("function! %s( count, isInner )\nif a:isInner\nreturn (CountJump#CountSearch(a:count, ['%s', 'ceW']) ? CountJump#CountSearch(1, ['%s', 'bcW']) : 0)\nelse\nreturn CountJump#CountSearch(a:count, ['%s', 'ceW'])\nendif\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd), s:Escape(a:patternToEnd), s:Escape(a:patternToEnd))
 
     return CountJump#TextObject#MakeWithJumpFunctions(a:mapArgs, a:textObjectKey, a:types, a:selectionMode, s:function(l:functionToBeginName), s:function(l:functionToEndName))
 endfunction
