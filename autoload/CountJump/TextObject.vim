@@ -8,6 +8,13 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	002	02-Oct-2009	ENH: Checking whether the jump is not around the
+"				cursor position. 
+"				ENH: Consistently beeping and re-entering visual
+"				mode in case of no selection of text object,
+"				like the built-in text objects behave. Added
+"				a:mode argument to
+"				CountJump#TextObject#TextObjectWithJumpFunctions(). 
 "	001	14-Feb-2009	Renamed from 'custommotion.vim' to
 "				'CountJump.vim' and split off motion and
 "				text object parts. 
@@ -22,27 +29,45 @@ endfunction
 "			outer delimiters. 
 "ax			Select [count] text blocks delimited by ??? including
 "			the delimiters. 
-function! CountJump#TextObject#TextObjectWithJumpFunctions( isInner, selectionMode, JumpToBegin, JumpToEnd )
+function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selectionMode, JumpToBegin, JumpToEnd )
 "*******************************************************************************
 "* PURPOSE:
-"	? What the procedure does (not how).
+"   Creates a visual selection (in a:selectionMode) around the <count>'th
+"   inner / outer text object delimited by the a:JumpToBegin and a:JumpToEnd
+"   functions. 
+"   If there is no match, or the jump is not around the cursor position, the
+"   failure to select the text object is indicated via a beep. In visual mode,
+"   the selection is maintained then (using a:selectionMode). the built-in text
+"   objects work in the same way. 
+"
 "* ASSUMPTIONS / PRECONDITIONS:
-"	? List of any external variable, control, or other element whose state affects this procedure.
+"   None. 
+"
 "* EFFECTS / POSTCONDITIONS:
-"	? List of the procedure's effect on each external variable, control, or other element.
+"   Creates / modifies visual selection. 
+"
 "* INPUTS:
-"	? Explanation of each argument that isn't obvious.
+"   a:mode  Mode for the text object; either 'o' (operator-pending) or 'v'
+"	    (visual). 
+"   a:isInner	Flag whether this is an "inner" text object (i.e. it excludes
+"		the boundaries, or an "outer" one. 
+"   a:selectionMode Specifies how the text object selects text; either 'v', 'V'
+"		    or "\<CTRL-V>". 
+"   a:JumpToBegin   Funcref that jumps to the beginning of the text object. 
+"		    The function must take a count (always 1 here) and the
+"		    a:isInner flag (which determines whether the jump should be
+"		    to the end of the boundary text). 
+"   a:JumpToEnd	    Funcref that jumps to the end of the text object. 
+"		    The function must take a count and the a:isInner flag. 
 "* RETURN VALUES: 
-"	? Explanation of the value returned.
-"* TODO:
-"   - Check whether jumps actually move around the cursor position, and not
-"     delimit a block somewhere else. 
+"   None. 
 "*******************************************************************************
     let l:count = v:count1
     let l:isExclusive = (&selection ==# 'exclusive')
     let l:isLinewise = (a:selectionMode ==# 'V')
     let l:save_view = winsaveview()
     let [l:cursorLine, l:cursorCol] = [line('.'), col('.')] 
+    let l:isSelected = 0
 
     let l:save_whichwrap = &whichwrap
     set whichwrap+=h,l
@@ -64,8 +89,8 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( isInner, selectionMo
 		" case an end has been found. 
 		execute "normal! \<Esc>" . (l:isFoundEnd ? "\<Esc>" : '')
 		call winrestview(l:save_view)
-		execute 'normal!' a:selectionMode
 	    else
+		let l:isSelected = 1
 		if l:isLinewise && a:isInner
 		    normal! k
 		else
@@ -76,6 +101,13 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( isInner, selectionMo
 		    endif
 		endif
 	    endif
+	endif
+
+	if ! l:isSelected && a:mode ==# 'v'
+	    " Re-enter visual mode if no text object could be selected. This
+	    " must not be done in operator-pending mode, or the operator would
+	    " work on the selection! 
+	    execute 'normal!' a:selectionMode
 	endif
     finally
 	let &whichwrap = l:save_whichwrap
@@ -133,8 +165,8 @@ function! CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, ty
 	endif
 	for l:mode in ['o', 'v']
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#TextObject#TextObjectWithJumpFunctions('%s', '%s', %s, %s)<CR>",
-	    \   l:mode, a:mapArgs, (l:type . a:textObjectKey), l:isInner, a:selectionMode, string(a:JumpToBegin), string(a:JumpToEnd)
+	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#TextObject#TextObjectWithJumpFunctions('%s', '%s', '%s', %s, %s)<CR>",
+	    \   l:mode, a:mapArgs, (l:type . a:textObjectKey), l:mode, l:isInner, a:selectionMode, string(a:JumpToBegin), string(a:JumpToEnd)
 	    \   ), '|'
 	    \)
 	endfor
