@@ -8,6 +8,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	003	03-Oct-2009	ENH: Inner text objects can now be selected when
+"				the cursor is on the boundary text, like the
+"				built-in text object. The jump funcrefs now
+"				return the jump position (like searchpos()), not
+"				just the jump line number. 
 "	002	02-Oct-2009	ENH: Checking whether the jump is not around the
 "				cursor position. 
 "				ENH: Consistently beeping and re-entering visual
@@ -29,7 +34,7 @@ endfunction
 "			outer delimiters. 
 "ax			Select [count] text blocks delimited by ??? including
 "			the delimiters. 
-function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selectionMode, JumpToBegin, JumpToEnd, isSupportsBothInnerAndOuter )
+function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selectionMode, JumpToBegin, JumpToEnd )
 "*******************************************************************************
 "* PURPOSE:
 "   Creates a visual selection (in a:selectionMode) around the <count>'th
@@ -59,6 +64,17 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
 "		    to the end of the boundary text). 
 "   a:JumpToEnd	    Funcref that jumps to the end of the text object. 
 "		    The function must take a count and the a:isInner flag. 
+"
+"		    Both funcrefs must return a list [lnum, col], like
+"		    searchpos(). This should be the jump position (or [0, 0] if
+"		    a jump wasn't possible). Normally, this should correspond to
+"		    the cursor position set by the jump function. However, for
+"		    an inner jump, this could also be the outer jump position.
+"		    This function will use this position for the check that the
+"		    jump is around the cursor position; if the returned position
+"		    is the outer jump position, an inner text object will allow
+"		    selection even when the cursor is on the boundary text (like
+"		    the built-in text objects). 
 "* RETURN VALUES: 
 "   None. 
 "*******************************************************************************
@@ -72,7 +88,8 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
     let l:save_whichwrap = &whichwrap
     set whichwrap+=h,l
     try
-	if call(a:JumpToBegin, [1, a:isInner])
+	let l:beginPosition = call(a:JumpToBegin, [1, a:isInner])
+	if l:beginPosition != [0, 0]
 	    if a:isInner
 		if l:isLinewise
 		    normal! j
@@ -82,24 +99,22 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
 	    endif
 	    execute 'normal!' a:selectionMode
 
-	    " TODO
-	    let l:isInner = (a:isInner && ! a:isSupportsBothInnerAndOuter)
-	    let l:begin_cursor = getpos('.')
-
-	    let l:isFoundEnd = call(a:JumpToEnd, [l:count, l:isInner])
-	    if ! l:isFoundEnd || line('.') < l:cursorLine || (line('.') == l:cursorLine && col('.') < l:cursorCol)
+	    let l:endPosition = call(a:JumpToEnd, [l:count, a:isInner])
+	    if l:endPosition == [0, 0] ||
+	    \	l:endPosition[0] < l:cursorLine ||
+	    \	(l:endPosition[0] == l:cursorLine && l:endPosition[1] < l:cursorCol)
 		" The end has not been found or is located before the original
 		" cursor position; abort and beep. 
+		" For the check, the returned jump position is used, not the
+		" current cursor position. This enables the jump functions to
+		" return the outer jump position for an inner jump, and allows
+		" to select an inner text object when the cursor is on the
+		" boundary text. 
 		" Note: We need one additional <Esc> to cancel visual mode in
 		" case an end has been found. 
-		execute "normal! \<Esc>" . (l:isFoundEnd ? "\<Esc>" : '')
+		execute "normal! \<Esc>" . (l:endPosition == [0, 0] ? '' : "\<Esc>")
 		call winrestview(l:save_view)
 	    else
-		if a:isInner && a:isSupportsBothInnerAndOuter
-		    call setpos('.', l:begin_cursor)
-		    call call(a:JumpToEnd, [l:count, 1])
-		endif
-
 		let l:isSelected = 1
 		if l:isLinewise && a:isInner
 		    normal! k
@@ -175,8 +190,8 @@ function! CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, ty
 	endif
 	for l:mode in ['o', 'v']
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#TextObject#TextObjectWithJumpFunctions('%s', '%s', '%s', %s, %s, %s)<CR>",
-	    \   l:mode, a:mapArgs, (l:type . a:textObjectKey), l:mode, l:isInner, a:selectionMode, string(a:JumpToBegin), string(a:JumpToEnd), (strlen(a:types) > 1)
+	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#TextObject#TextObjectWithJumpFunctions('%s', '%s', '%s', %s, %s)<CR>",
+	    \   l:mode, a:mapArgs, (l:type . a:textObjectKey), l:mode, l:isInner, a:selectionMode, string(a:JumpToBegin), string(a:JumpToEnd)
 	    \   ), '|'
 	    \)
 	endfor
@@ -226,10 +241,28 @@ function! CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, type
     let l:functionToBeginName = printf('%sJumpToBegin_%s', l:scope, a:textObjectKey)
     let l:functionToEndName   = printf('%sJumpToEnd_%s', l:scope, a:textObjectKey)
 
-    execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW' . (a:isInner ? 'e' : '')])\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin))
+    " In case of an inner jump, we first make an outer jump, store the position,
+    " then go to the other (inner) side of the boundary text, and return the
+    " outer jump position. This allows the text object to select an inner text
+    " object when the cursor is on the boundary text. 
+    let l:searchFunction = "
+    \	function! %s( count, isInner )\n
+    \	    if a:isInner\n
+    \		let l:matchPos = CountJump#CountSearch(a:count, ['%s', '%s'])\n
+    \		if l:matchPos != [0, 0]\n
+    \		    call CountJump#CountSearch(1, ['%s', '%s'])\n
+    \		endif\n
+    \		return l:matchPos\n
+    \	    else\n
+    \		return CountJump#CountSearch(a:count, ['%s', '%s'])\n
+    \	    endif\n
+    \	endfunction"
+    "execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW' . (a:isInner ? 'e' : '')])\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin))
     "execute printf("function! %s( count, isInner )\nif a:isInner\nreturn (CountJump#CountSearch(a:count, ['%s', 'bcW']) ? CountJump#CountSearch(1, ['%s', 'ceW']) : 0)\nelse\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW'])\nendif\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin), s:Escape(a:patternToBegin), s:Escape(a:patternToBegin))
-    execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'cW'  . (a:isInner ? '' : 'e')])\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd))
+    execute printf(l:searchFunction, l:functionToBeginName, s:Escape(a:patternToBegin), 'bcW', s:Escape(a:patternToBegin), 'ceW', s:Escape(a:patternToBegin), 'bcW')
+    "execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'cW'  . (a:isInner ? '' : 'e')])\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd))
     "execute printf("function! %s( count, isInner )\nif a:isInner\nreturn (CountJump#CountSearch(a:count, ['%s', 'ceW']) ? CountJump#CountSearch(1, ['%s', 'bcW']) : 0)\nelse\nreturn CountJump#CountSearch(a:count, ['%s', 'ceW'])\nendif\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd), s:Escape(a:patternToEnd), s:Escape(a:patternToEnd))
+    execute printf(l:searchFunction, l:functionToEndName, s:Escape(a:patternToEnd), 'ceW', s:Escape(a:patternToEnd), 'bcW', s:Escape(a:patternToEnd), 'ceW')
 
     return CountJump#TextObject#MakeWithJumpFunctions(a:mapArgs, a:textObjectKey, a:types, a:selectionMode, s:function(l:functionToBeginName), s:function(l:functionToEndName))
 endfunction
