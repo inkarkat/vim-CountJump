@@ -29,7 +29,7 @@ endfunction
 "			outer delimiters. 
 "ax			Select [count] text blocks delimited by ??? including
 "			the delimiters. 
-function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selectionMode, JumpToBegin, JumpToEnd )
+function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selectionMode, JumpToBegin, JumpToEnd, isSupportsBothInnerAndOuter )
 "*******************************************************************************
 "* PURPOSE:
 "   Creates a visual selection (in a:selectionMode) around the <count>'th
@@ -81,7 +81,12 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
 		endif
 	    endif
 	    execute 'normal!' a:selectionMode
-	    let l:isFoundEnd = call(a:JumpToEnd, [l:count, a:isInner])
+
+	    " TODO
+	    let l:isInner = (a:isInner && ! a:isSupportsBothInnerAndOuter)
+	    let l:begin_cursor = getpos('.')
+
+	    let l:isFoundEnd = call(a:JumpToEnd, [l:count, l:isInner])
 	    if ! l:isFoundEnd || line('.') < l:cursorLine || (line('.') == l:cursorLine && col('.') < l:cursorCol)
 		" The end has not been found or is located before the original
 		" cursor position; abort and beep. 
@@ -90,6 +95,11 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
 		execute "normal! \<Esc>" . (l:isFoundEnd ? "\<Esc>" : '')
 		call winrestview(l:save_view)
 	    else
+		if a:isInner && a:isSupportsBothInnerAndOuter
+		    call setpos('.', l:begin_cursor)
+		    call call(a:JumpToEnd, [l:count, 1])
+		endif
+
 		let l:isSelected = 1
 		if l:isLinewise && a:isInner
 		    normal! k
@@ -165,8 +175,8 @@ function! CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, ty
 	endif
 	for l:mode in ['o', 'v']
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#TextObject#TextObjectWithJumpFunctions('%s', '%s', '%s', %s, %s)<CR>",
-	    \   l:mode, a:mapArgs, (l:type . a:textObjectKey), l:mode, l:isInner, a:selectionMode, string(a:JumpToBegin), string(a:JumpToEnd)
+	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#TextObject#TextObjectWithJumpFunctions('%s', '%s', '%s', %s, %s, %s)<CR>",
+	    \   l:mode, a:mapArgs, (l:type . a:textObjectKey), l:mode, l:isInner, a:selectionMode, string(a:JumpToBegin), string(a:JumpToEnd), (strlen(a:types) > 1)
 	    \   ), '|'
 	    \)
 	endfor
@@ -216,10 +226,10 @@ function! CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, type
     let l:functionToBeginName = printf('%sJumpToBegin_%s', l:scope, a:textObjectKey)
     let l:functionToEndName   = printf('%sJumpToEnd_%s', l:scope, a:textObjectKey)
 
-    "execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW' . (a:isInner ? 'e' : '')])\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin))
-    execute printf("function! %s( count, isInner )\nif a:isInner\nreturn (CountJump#CountSearch(a:count, ['%s', 'bcW']) ? CountJump#CountSearch(1, ['%s', 'ceW']) : 0)\nelse\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW'])\nendif\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin), s:Escape(a:patternToBegin), s:Escape(a:patternToBegin))
-    "execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'cW'  . (a:isInner ? '' : 'e')])\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd))
-    execute printf("function! %s( count, isInner )\nif a:isInner\nreturn (CountJump#CountSearch(a:count, ['%s', 'ceW']) ? CountJump#CountSearch(1, ['%s', 'bcW']) : 0)\nelse\nreturn CountJump#CountSearch(a:count, ['%s', 'ceW'])\nendif\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd), s:Escape(a:patternToEnd), s:Escape(a:patternToEnd))
+    execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW' . (a:isInner ? 'e' : '')])\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin))
+    "execute printf("function! %s( count, isInner )\nif a:isInner\nreturn (CountJump#CountSearch(a:count, ['%s', 'bcW']) ? CountJump#CountSearch(1, ['%s', 'ceW']) : 0)\nelse\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW'])\nendif\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin), s:Escape(a:patternToBegin), s:Escape(a:patternToBegin))
+    execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'cW'  . (a:isInner ? '' : 'e')])\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd))
+    "execute printf("function! %s( count, isInner )\nif a:isInner\nreturn (CountJump#CountSearch(a:count, ['%s', 'ceW']) ? CountJump#CountSearch(1, ['%s', 'bcW']) : 0)\nelse\nreturn CountJump#CountSearch(a:count, ['%s', 'ceW'])\nendif\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd), s:Escape(a:patternToEnd), s:Escape(a:patternToEnd))
 
     return CountJump#TextObject#MakeWithJumpFunctions(a:mapArgs, a:textObjectKey, a:types, a:selectionMode, s:function(l:functionToBeginName), s:function(l:functionToEndName))
 endfunction
