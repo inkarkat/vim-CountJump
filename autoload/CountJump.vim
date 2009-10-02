@@ -8,6 +8,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	005	02-Oct-2009	CountJump#CountSearch() now handles 'c' search()
+"				flag; it is cleared on subsequent iterations to
+"				avoid staying put at the current match. 
 "	004	14-Feb-2009	Renamed from 'custommotion.vim' to
 "				'CountJump.vim' and split off motion and
 "				text object parts. 
@@ -32,6 +35,14 @@ function! CountJump#CountSearch( count, searchArguments )
 	    execute "normal \<Plug>RingTheBell"
 
 	    return l:lineNum
+	endif
+
+	if len(a:searchArguments) > 1 && l:i == 1
+	    " In case the search accepts a match at the cursor position
+	    " (i.e. search(..., 'c')), the flag must only be active on the very
+	    " first iteration; otherwise, all subsequent iterations will just
+	    " stay put at the current match. 
+	    let a:searchArguments[1] = substitute(a:searchArguments[1], 'c', '', 'g')
 	endif
     endfor
 
