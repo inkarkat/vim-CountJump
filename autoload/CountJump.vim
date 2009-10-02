@@ -8,6 +8,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	006	03-Oct-2009	Now returning [lnum, col] like searchpos(), not
+"				just line number. 
 "	005	02-Oct-2009	CountJump#CountSearch() now handles 'c' search()
 "				flag; it is cleared on subsequent iterations to
 "				avoid staying put at the current match. 
@@ -23,8 +25,8 @@
 
 function! CountJump#CountSearch( count, searchArguments )
     for l:i in range(1, a:count)
-	let l:lineNum = call('search', a:searchArguments)
-	if ! l:lineNum
+	let l:matchPos = call('searchpos', a:searchArguments)
+	if l:matchPos == [0, 0]
 	    " Ring the bell to indicate that no further match exists. This is
 	    " unlike the old vi-compatible motions, but consistent with newer
 	    " movements like ]s. 
@@ -34,7 +36,7 @@ function! CountJump#CountSearch( count, searchArguments )
 	    " \<Esc>", which only works in normal mode. 
 	    execute "normal \<Plug>RingTheBell"
 
-	    return l:lineNum
+	    return l:matchPos
 	endif
 
 	if len(a:searchArguments) > 1 && l:i == 1
@@ -51,7 +53,7 @@ function! CountJump#CountSearch( count, searchArguments )
     " a match inside a closed fold. 
     normal! zv
 
-    return l:lineNum
+    return l:matchPos
 endfunction
 function! CountJump#CountJump( mode, ... )
 "*******************************************************************************
@@ -72,7 +74,7 @@ function! CountJump#CountJump( mode, ... )
 "   ...	    Arguments to search(). 
 "
 "* RETURN VALUES: 
-"   Line number of match or 0, like search(). 
+"   List with the line and column position, or [0, 0], like searchpos(). 
 "*******************************************************************************
     normal! m'
     if a:mode ==# 'v'
