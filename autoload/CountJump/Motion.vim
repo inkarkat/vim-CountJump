@@ -2,12 +2,15 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2009 by Ingo Karkat
+" Copyright: (C) 2009-2010 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	002	22-Jun-2010	Added missing :omaps for operator-pending mode. 
+"				Replaced s:Escape() with string() and simplified
+"				building of l:dataset. 
 "	001	14-Feb-2009	Renamed from 'custommotion.vim' to
 "				'CountJump.vim' and split off motion and
 "				text object parts. 
@@ -15,10 +18,6 @@
 
 let s:save_cpo = &cpo
 set cpo&vim
-
-function! s:Escape( argumentText )
-    return substitute(a:argumentText, "'", "''", 'g')
-endfunction
 
 "			Move around ???
 "]x, ]]			Go to [count] next start of ???. 
@@ -35,6 +34,8 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 "   Define a complete set of mappings for a [x / ]x motion (e.g. like the
 "   built-in ]m "Jump to start of next method") that support an optional [count]
 "   and are driven by search patterns for the beginning and end of a block. 
+"   The mappings work in normal mode (jump), visual mode (expand selection) and
+"   operator-pending mode (execute operator). 
 "
 "* ASSUMPTIONS / PRECONDITIONS:
 "   None. 
@@ -82,33 +83,27 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 
     if empty(a:keyAfterBracket) && empty(a:inverseKeyAfterBracket)
 	let l:dataset = [
-	\   [ 'n', '[[', a:patternToBegin, 'bW' ],
-	\   [ 'v', '[[', a:patternToBegin, 'bW' ],
-	\   [ 'n', ']]', a:patternToBegin, 'W' ],
-	\   [ 'v', ']]', a:patternToBegin, 'W' ],
-	\   [ 'n', '[]', a:patternToEnd, 'bW' . l:endMatch ],
-	\   [ 'v', '[]', a:patternToEnd, 'bW' . l:endMatch ],
-	\   [ 'n', '][', a:patternToEnd, 'W' . l:endMatch ],
-	\   [ 'v', '][', a:patternToEnd, 'W' . l:endMatch ],
+	\   [ '[[', a:patternToBegin, 'bW' ],
+	\   [ ']]', a:patternToBegin, 'W' ],
+	\   [ '[]', a:patternToEnd, 'bW' . l:endMatch ],
+	\   [ '][', a:patternToEnd, 'W' . l:endMatch ],
 	\]
     else
 	let l:dataset = [
-	\   [ 'n', '[' . a:keyAfterBracket, a:patternToBegin, 'bW' ],
-	\   [ 'v', '[' . a:keyAfterBracket, a:patternToBegin, 'bW' ],
-	\   [ 'n', ']' . a:keyAfterBracket, a:patternToBegin, 'W' ],
-	\   [ 'v', ']' . a:keyAfterBracket, a:patternToBegin, 'W' ],
-	\   [ 'n', '[' . a:inverseKeyAfterBracket, a:patternToEnd, 'bW' . l:endMatch ],
-	\   [ 'v', '[' . a:inverseKeyAfterBracket, a:patternToEnd, 'bW' . l:endMatch ],
-	\   [ 'n', ']' . a:inverseKeyAfterBracket, a:patternToEnd, 'W' . l:endMatch ],
-	\   [ 'v', ']' . a:inverseKeyAfterBracket, a:patternToEnd, 'W' . l:endMatch ],
+	\   [ '[' . a:keyAfterBracket, a:patternToBegin, 'bW' ],
+	\   [ ']' . a:keyAfterBracket, a:patternToBegin, 'W' ],
+	\   [ '[' . a:inverseKeyAfterBracket, a:patternToEnd, 'bW' . l:endMatch ],
+	\   [ ']' . a:inverseKeyAfterBracket, a:patternToEnd, 'W' . l:endMatch ],
 	\]
     endif
-    for l:data in l:dataset
-	execute escape(
-	\   printf("%snoremap <silent> %s %s :<C-U>call CountJump#CountJump('%s', '%s', '%s')<CR>",
-	\	l:data[0], a:mapArgs, l:data[1], s:Escape(l:data[0]), s:Escape(l:data[2]), s:Escape(l:data[3])
-	\   ), '|'
-	\)
+    for l:mode in ['n', 'v', 'o']
+	for l:data in l:dataset
+	    execute escape(
+	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#CountJump(%s, %s, %s)<CR>",
+	    \	l:mode, a:mapArgs, l:data[0], string(l:mode), string(l:data[1]), string(l:data[2])
+	    \   ), '|'
+	    \)
+	endfor
     endfor
 endfunction
 
