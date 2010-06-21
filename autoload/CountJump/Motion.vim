@@ -2,15 +2,18 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2009-2010 by Ingo Karkat
+" Copyright: (C) 2009-2010 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
-"	002	22-Jun-2010	Added missing :omaps for operator-pending mode. 
+"   1.00.002	22-Jun-2010	Added missing :omaps for operator-pending mode. 
 "				Replaced s:Escape() with string() and simplified
 "				building of l:dataset. 
+"				Added special mode 'O' to indicate
+"				operator-pending mapping with
+"				a:isEndPatternToEnd. 
 "	001	14-Feb-2009	Renamed from 'custommotion.vim' to
 "				'CountJump.vim' and split off motion and
 "				text object parts. 
@@ -41,9 +44,10 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 "   None. 
 "
 "* EFFECTS / POSTCONDITIONS:
-"   Creates mappings for normal and visual mode: 
+"   Creates mappings for normal, visual and operator-pending mode: 
 "	Normal mode: Jumps to the <count>th occurrence. 
 "	Visual mode: Extends the selection to the <count>th occurrence. 
+"	Operator-pending mode: Applies the operator to the covered text. 
 "	If the pattern doesn't match (<count> times), a beep is emitted. 
 "
 "* INPUTS:
@@ -100,7 +104,9 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 	for l:data in l:dataset
 	    execute escape(
 	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#CountJump(%s, %s, %s)<CR>",
-	    \	l:mode, a:mapArgs, l:data[0], string(l:mode), string(l:data[1]), string(l:data[2])
+	    \	l:mode, a:mapArgs, l:data[0],
+	    \	string((l:mode ==# 'o' && a:isEndPatternToEnd) ? 'O' : l:mode),
+	    \	string(l:data[1]), string(l:data[2])
 	    \   ), '|'
 	    \)
 	endfor
