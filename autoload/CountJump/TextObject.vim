@@ -203,7 +203,7 @@ function! CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, ty
 	endif
 	for l:mode in ['o', 'v']
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#TextObject#TextObjectWithJumpFunctions('%s', '%s', '%s', %s, %s)<CR>",
+	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#TextObject#TextObjectWithJumpFunctions('%s', %s, '%s', %s, %s)<CR>",
 	    \   l:mode, a:mapArgs, (l:type . a:textObjectKey), l:mode, l:isInner, a:selectionMode, string(a:JumpToBegin), string(a:JumpToEnd)
 	    \   ), '|'
 	    \)
@@ -279,10 +279,20 @@ function! CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, type
     \	endfunction"
     "execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW' . (a:isInner ? 'e' : '')])\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin))
     "execute printf("function! %s( count, isInner )\nif a:isInner\nreturn (CountJump#CountSearch(a:count, ['%s', 'bcW']) ? CountJump#CountSearch(1, ['%s', 'ceW']) : 0)\nelse\nreturn CountJump#CountSearch(a:count, ['%s', 'bcW'])\nendif\nendfunction", l:functionToBeginName, s:Escape(a:patternToBegin), s:Escape(a:patternToBegin), s:Escape(a:patternToBegin))
-    execute printf(l:searchFunction, l:functionToBeginName, s:Escape(a:patternToBegin), 'bcW', s:Escape(a:patternToBegin), 'ceW', s:Escape(a:patternToBegin), 'bcW')
+    execute printf(l:searchFunction,
+    \	l:functionToBeginName,
+    \	s:Escape(a:patternToBegin), 'bcW',
+    \	s:Escape(a:patternToBegin), 'ceW',
+    \	s:Escape(a:patternToBegin), 'bcW'
+    \)
     "execute printf("function! %s( count, isInner )\nreturn CountJump#CountSearch(a:count, ['%s', 'cW'  . (a:isInner ? '' : 'e')])\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd))
     "execute printf("function! %s( count, isInner )\nif a:isInner\nreturn (CountJump#CountSearch(a:count, ['%s', 'ceW']) ? CountJump#CountSearch(1, ['%s', 'bcW']) : 0)\nelse\nreturn CountJump#CountSearch(a:count, ['%s', 'ceW'])\nendif\nendfunction", l:functionToEndName, s:Escape(a:patternToEnd), s:Escape(a:patternToEnd), s:Escape(a:patternToEnd))
-    execute printf(l:searchFunction, l:functionToEndName, s:Escape(a:patternToEnd), 'ceW', s:Escape(a:patternToEnd), 'bcW', s:Escape(a:patternToEnd), 'ceW')
+    execute printf(l:searchFunction,
+    \	l:functionToEndName,
+    \	s:Escape(a:patternToEnd), 'ceW',
+    \	s:Escape(a:patternToEnd), 'bcW',
+    \	s:Escape(a:patternToEnd), 'ceW'
+    \)
 
     return CountJump#TextObject#MakeWithJumpFunctions(a:mapArgs, a:textObjectKey, a:types, a:selectionMode, s:function(l:functionToBeginName), s:function(l:functionToEndName))
 endfunction
