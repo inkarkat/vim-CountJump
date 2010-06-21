@@ -12,6 +12,11 @@
 "				CountJump#TextObject#MakeWithCountSearch() must
 "				include the type when not both inner and outer
 "				text objects are defined. 
+"				BUG: For the outer jump to end, a:patternToEnd
+"				must not match at the current cursor position
+"				(no 'c' flag to search()). This allows to handle
+"				outer text objects that are delimited by the
+"				same, single character. 
 "	003	03-Oct-2009	ENH: Inner text objects can now be selected when
 "				the cursor is on the boundary text, like the
 "				built-in text object. The jump funcrefs now
@@ -291,8 +296,11 @@ function! CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, type
     \	l:functionToEndName,
     \	s:Escape(a:patternToEnd), 'ceW',
     \	s:Escape(a:patternToEnd), 'bcW',
-    \	s:Escape(a:patternToEnd), 'ceW'
+    \	s:Escape(a:patternToEnd), 'eW'
     \)
+    " Note: For the outer jump to end, a:patternToEnd must not match at the
+    " current cursor position (no 'c' flag to search()). This allows to handle
+    " outer text objects that are delimited by the same, single character. 
 
     return CountJump#TextObject#MakeWithJumpFunctions(a:mapArgs, a:textObjectKey, a:types, a:selectionMode, s:function(l:functionToBeginName), s:function(l:functionToEndName))
 endfunction
