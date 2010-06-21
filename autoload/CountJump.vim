@@ -24,8 +24,9 @@
 "	001	12-Feb-2009	file creation
 
 function! CountJump#CountSearch( count, searchArguments )
+    let l:searchArguments = copy(a:searchArguments)
     for l:i in range(1, a:count)
-	let l:matchPos = call('searchpos', a:searchArguments)
+	let l:matchPos = call('searchpos', l:searchArguments)
 	if l:matchPos == [0, 0]
 	    " Ring the bell to indicate that no further match exists. This is
 	    " unlike the old vi-compatible motions, but consistent with newer
@@ -39,12 +40,12 @@ function! CountJump#CountSearch( count, searchArguments )
 	    return l:matchPos
 	endif
 
-	if len(a:searchArguments) > 1 && l:i == 1
+	if len(l:searchArguments) > 1 && l:i == 1
 	    " In case the search accepts a match at the cursor position
 	    " (i.e. search(..., 'c')), the flag must only be active on the very
 	    " first iteration; otherwise, all subsequent iterations will just
 	    " stay put at the current match. 
-	    let a:searchArguments[1] = substitute(a:searchArguments[1], 'c', '', 'g')
+	    let l:searchArguments[1] = substitute(l:searchArguments[1], 'c', '', 'g')
 	endif
     endfor
 
