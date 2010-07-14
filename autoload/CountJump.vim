@@ -83,12 +83,7 @@ function! CountJump#CountJump( mode, ... )
 "* RETURN VALUES: 
 "   List with the line and column position, or [0, 0], like searchpos(). 
 "*******************************************************************************
-    " Add the original cursor position to the jump list. 
-    " This should only be done when there is a match (i.e.
-    " CountJump#CountSearch() return a location), but implementing this would
-    " require winsaveview(), jumping back to the original cursor position,
-    " setting the mark, then restoring the winview. 
-    normal! m'
+    let l:save_view = winsaveview()
 
     if a:mode ==# 'v'
 	normal! gv
@@ -120,7 +115,15 @@ function! CountJump#CountJump( mode, ... )
 	return l:matchPos
     endif
 
-    return CountJump#CountSearch(v:count1, a:000)
+    let l:matchPosition = CountJump#CountSearch(v:count1, a:000)
+    if l:matchPosition != [0, 0]
+	" Add the original cursor position to the jump list. 
+	call winrestview(l:save_view)
+	normal! m'
+	call setpos('.', [0] + l:matchPosition + [0])
+    endif
+
+    return l:matchPosition
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
