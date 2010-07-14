@@ -2,12 +2,16 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2009 by Ingo Karkat
+" Copyright: (C) 2009-2010 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.00.007	22-Jun-2010	Added special mode 'O' for
+"				CountJump#CountJump() with special correction
+"				for a pattern to end in operator-pending mode. 
+"				Reviewed for use in operator-pending mode. 
 "	006	03-Oct-2009	Now returning [lnum, col] like searchpos(), not
 "				just line number. 
 "	005	02-Oct-2009	CountJump#CountSearch() now handles 'c' search()
@@ -71,16 +75,51 @@ function! CountJump#CountJump( mode, ... )
 "   If the pattern doesn't match (<count> times), a beep is emitted. 
 "
 "* INPUTS:
-"   a:mode  Mode in which the search is invoked. Either 'n' or 'v'. 
+"   a:mode  Mode in which the search is invoked. Either 'n', 'v' or 'o'. 
+"	    With 'O': Special additional treatment for operator-pending mode
+"	    with a pattern to end. 
 "   ...	    Arguments to search(). 
 "
 "* RETURN VALUES: 
 "   List with the line and column position, or [0, 0], like searchpos(). 
 "*******************************************************************************
+    " Add the original cursor position to the jump list. 
+    " This should only be done when there is a match (i.e.
+    " CountJump#CountSearch() return a location), but implementing this would
+    " require winsaveview(), jumping back to the original cursor position,
+    " setting the mark, then restoring the winview. 
     normal! m'
+
     if a:mode ==# 'v'
 	normal! gv
     endif
+
+    if a:mode ==# 'O'
+	" Special additional treatment for operator-pending mode with a pattern
+	" to end. 
+	let l:matchPos = CountJump#CountSearch(v:count1, a:000)
+	if l:matchPos != [0, 0]
+	    " The difference between normal mode, visual and operator-pending 
+	    " mode is that in the latter, the motion must go _past_ the final
+	    " character, so that all characters are selected. This is done by
+	    " appending a 'l' motion after the search. 
+	    "
+	    " In operator-pending mode, the 'l' motion only works properly
+	    " at the end of the line (i.e. when the moved-over "word" is at
+	    " the end of the line) when the 'l' motion is allowed to move
+	    " over to the next line. Thus, the 'l' motion is added
+	    " temporarily to the global 'whichwrap' setting. 
+	    " Without this, the motion would leave out the last character in
+	    " the line. I've also experimented with temporarily setting
+	    " "set virtualedit=onemore", but that didn't work. 
+	    let l:save_ww = &whichwrap
+	    set whichwrap+=l
+	    normal! l
+	    let &whichwrap = l:save_ww
+	endif
+	return l:matchPos
+    endif
+
     return CountJump#CountSearch(v:count1, a:000)
 endfunction
 
