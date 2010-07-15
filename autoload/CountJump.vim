@@ -8,6 +8,14 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.10.008	15-Jul-2010	Changed behavior if there aren't [count]
+"				matches: Instead of jumping to the last
+"				available match (and ringing the bell), the
+"				cursor stays at the original position, like with
+"				the old vi-compatible motions. 
+"				ENH: Only adding to jump list if there actually
+"				is a match. This is like the built-in Vim
+"				motions work. 
 "   1.00.007	22-Jun-2010	Added special mode 'O' for
 "				CountJump#CountJump() with special correction
 "				for a pattern to end in operator-pending mode. 
@@ -28,13 +36,22 @@
 "	001	12-Feb-2009	file creation
 
 function! CountJump#CountSearch( count, searchArguments )
+    let l:save_view = winsaveview()
     let l:searchArguments = copy(a:searchArguments)
+
     for l:i in range(1, a:count)
 	let l:matchPos = call('searchpos', l:searchArguments)
 	if l:matchPos == [0, 0]
-	    " Ring the bell to indicate that no further match exists. This is
-	    " unlike the old vi-compatible motions, but consistent with newer
-	    " movements like ]s. 
+	    if l:i > 1
+		" (Due to the count,) we've already moved to an intermediate
+		" match. Undo that to behave like the old vi-compatible
+		" motions. (Only the ]s motion has different semantics; it obeys
+		" the 'wrapscan' setting and stays at the last possible match if
+		" the setting is off.) 
+		call winrestview(l:save_view)
+	    endif
+
+	    " Ring the bell to indicate that no further match exists. 
 	    "
 	    " As long as this mapping does not exist, it causes a beep in both
 	    " normal and visual mode. This is easier than the customary "normal!
