@@ -79,8 +79,12 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
 "		    The function must take a count (always 1 here) and the
 "		    a:isInner flag (which determines whether the jump should be
 "		    to the end of the boundary text). 
+"		    The function is invoked at the cursor position where the
+"		    text object was requested. 
 "   a:JumpToEnd	    Funcref that jumps to the end of the text object. 
 "		    The function must take a count and the a:isInner flag. 
+"		    The function is invoked after the call to a:JumpToBegin,
+"		    with the cursor located at the beginning of the text object. 
 "
 "		    Both funcrefs must return a list [lnum, col], like
 "		    searchpos(). This should be the jump position (or [0, 0] if
