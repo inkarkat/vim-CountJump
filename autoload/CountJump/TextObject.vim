@@ -1,6 +1,7 @@
 " CountJump#TextObject.vim: Create custom text objects via repeated jumps (or searches). 
 "
 " DEPENDENCIES:
+"   - CountJump.vim autoload script. 
 "
 " Copyright: (C) 2009-2010 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -17,6 +18,10 @@
 "				(no 'c' flag to search()). This allows to handle
 "				outer text objects that are delimited by the
 "				same, single character. 
+"				Escaping a:textObjectKey when used in a function
+"				name via s:EscapeForFunctionName(). This allows
+"				to use non-alphabetical keys for a text object
+"				(e.g. i$, a$). 
 "	003	03-Oct-2009	ENH: Inner text objects can now be selected when
 "				the cursor is on the boundary text, like the
 "				built-in text object. The jump funcrefs now
@@ -216,6 +221,11 @@ function! CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, ty
     endfor
 endfunction
 
+function! s:EscapeForFunctionName( text )
+    " Convert all non-alphabetical characters to their hex value to create a
+    " valid function name. 
+    return substitute(a:text, '\A', '\=char2nr(submatch(0))', 'g')
+endfunction
 function! s:function(name)
     return function(substitute(a:name, '^s:', matchstr(expand('<sfile>'), '<SNR>\d\+_\zefunction$'),''))
 endfunction 
@@ -261,10 +271,8 @@ function! CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, type
     " and outer text objects, no such distinction need to be made. 
     let l:typePrefix = (strlen(a:types) == 1 ? a:types : '')
 
-    " TODO: Escaping. Currently assuming that a:textObjectKey is a valid string
-    " to be used in a function name. 
-    let l:functionToBeginName = printf('%sJumpToBegin_%s%s', l:scope, l:typePrefix, a:textObjectKey)
-    let l:functionToEndName   = printf('%sJumpToEnd_%s%s', l:scope, l:typePrefix, a:textObjectKey)
+    let l:functionToBeginName = printf('%sJumpToBegin_%s%s', l:scope, l:typePrefix, s:EscapeForFunctionName(a:textObjectKey))
+    let l:functionToEndName   = printf('%sJumpToEnd_%s%s', l:scope, l:typePrefix, s:EscapeForFunctionName(a:textObjectKey))
 
     " In case of an inner jump, we first make an outer jump, store the position,
     " then go to the other (inner) side of the boundary text, and return the
