@@ -1,0 +1,158 @@
+*CountJump.txt*         Create custom motions and text objects via repeated jumps. 
+
+			 COUNT JUMP    by Ingo Karkat
+								*CountJump.vim*
+description			|CountJump-description|
+usage	    			|CountJump-usage|
+example	    			|CountJump-example|
+installation   			|CountJump-installation|
+limitations			|CountJump-limitations|
+known problems			|CountJump-known-problems|
+todo				|CountJump-todo|
+history				|CountJump-history|
+
+==============================================================================
+DESCRIPTION						*CountJump-description*
+
+Though it is not difficult to write a custom |movement| (basically a |:map|
+that executes some kind of search or jump) and a custom |text-object| (an
+|:omap| that selects a range of text), this is too complex for a novice user
+and often repetitive. 
+This plugin covers the common use case where the movement and boundaries of a
+text object can be specified via start and end patterns, and offers a single
+function to set up related mappings. With it, you can enhance some built-in
+Vim mappings to take an optional [count], and quickly define new mappings for
+help file sections, diff hunks, embedded macros, and so on... 
+
+RELATED WORKS *
+- motpat.vim (vimscript #3030) offers similar functions to setup motion
+  mappings, but no text objects (yet). 
+- textobj-user (vimscript #2100) has support for user-defined text objects via
+  regular expressions. 
+
+==============================================================================
+USAGE							      *CountJump-usage*
+
+The plugin defines several functions, which set up the appropriate mappings
+based on the arguments that you supply. The following is an overview; you'll
+find the details directly in the implementation files in the
+.vim/autoload/CountJump/ directory. 
+
+CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, patternToBegin, patternToEnd, isEndPatternToEnd, ... )
+
+This function sets up mappings starting with [ and ] for movement (with
+optional [count]) relative to the current cursor position, targeting either a
+text pattern at the beginning ([{keyAfterBracket} mapping) or a text pattern
+at the end (]{inverseKeyAfterBracket} mapping) of whatever you want to treat
+as a text block. 
+
+
+CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, types, selectionMode, patternToBegin, patternToEnd )
+
+Defines a complete set of mappings for inner and/or outer text objects that
+support an optional [count] and are driven by search patterns for the
+beginning and end of a block. Outer text objects include the matched pattern
+text, inner ones not. Selection can be characterwise, linewise or blockwise. 
+
+
+CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, types, selectionMode, JumpToBegin, JumpToEnd )
+
+This is a generalization of CountJump#TextObject#MakeWithCountSearch() that
+invokes custom functions instead of searching for a fixed pattern. This is
+useful if the check for a match is too complex for a single regular
+expression, or if you need to adjust the match position depending on the
+circumstances. 
+
+==============================================================================
+EXAMPLE							   *CountJump-example*
+
+Let's illustrate the usage by developing custom motions and text objects for
+an email fortune file, which contains blocks of text delimited by lines
+containing a "-- " marker. 
+
+
+We want to move around fortunes, and override the default section movements
+for it: 
+]]			Go to [count] next start of a fortune. 
+][			Go to [count] next end of a fortune. 
+[[			Go to [count] previous start of a fortune. 
+[]			Go to [count] previous end of a fortune. 
+>
+    call CountJump#Motion#MakeBracketMotion('<buffer>', '', '', '^-- \?\n\zs', '^.*\n-- \?$', 0)
+The begin pattern positions the cursor on the beginning of the line following
+the fortune separator '^-- \?', the end pattern on the beginning of the line
+preceding a separator. 
+
+
+We want to select a fortune, either including or excluding the preceding
+separator line: 
+if			"inner fortune" text object, select [count] fortunes,
+			excluding the fortune separator. 
+af			"a fortune" text object, select [count] fortunes, including
+			the preceding fortune separator. 
+>
+    call CountJump#TextObject#MakeWithCountSearch('<buffer>', 'f', 'i', 'V', '^-- \?$', '^-- \?$\|\%$')
+    call CountJump#TextObject#MakeWithCountSearch('<buffer>', 'f', 'a', 'V', '^-- \?$', '\ze.\n-- \?$\|\%$')
+The fortune text objects are linewise, and end either with a final separator
+or the end of the file. 
+
+
+If there is a filetype detection for fortune files, we can simply put the
+above calls in a ~/.vim/ftplugin/fortunes_movement.vim script and are done. 
+
+==============================================================================
+INSTALLATION					       *CountJump-installation*
+
+This script is packaged as a|vimball|. If you have the "gunzip" decompressor
+in your PATH, simply edit the *.vba.gz package in Vim; otherwise, decompress
+the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
+vimball or via the|:UseVimball|command. >
+    vim CountJump.vba.gz
+    :so %
+To uninstall, use the|:RmVimball|command. 
+
+DEPENDENCIES					       *CountJump-dependencies*
+
+- Requires Vim 7.0 or higher. 
+
+==============================================================================
+LIMITATIONS						*CountJump-limitations*
+
+KNOWN PROBLEMS					     *CountJump-known-problems*
+
+- An outer text object cannot consist of the same, multiple characters;
+  nothing will be selected (because the end pattern also matches at the begin
+  position). A same single character pattern works, though. 
+
+TODO							       *CountJump-todo*
+
+IDEAS							      *CountJump-ideas*
+
+- Add configuration to change behavior when there are no [count] matches: 
+  1. obey the 'wrapscan' option, like |]s| and/or
+  2. jump as many matches as possible, still beep to indicate the actual
+     target was not reached
+
+==============================================================================
+HISTORY							    *CountJump-history*
+
+1.10	15-Jul-2010
+- Changed behavior if there aren't [count] matches: Instead of jumping to the
+  last available match (and ringing the bell), the cursor stays at the
+  original position, like with the old vi-compatible motions. 
+- ENH: Only adding to jump list if there actually is a match. This is like the
+  built-in Vim motions work. 
+
+1.00	22-Jun-2010
+First published version. 
+
+0.01	14-Feb-2009
+Started development. 
+
+==============================================================================
+Copyright: (C) 2009-2010 by Ingo Karkat
+The VIM LICENSE applies to this script; see|copyright|. 
+
+Maintainer:	Ingo Karkat <ingo@karkat.de>
+==============================================================================
+ vim:tw=78:ts=8:ft=help:norl:
