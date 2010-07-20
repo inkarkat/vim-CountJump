@@ -9,6 +9,13 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.11.006	21-Jul-2010	Only creating the visual selection for the text
+"				object after both begin and end position have
+"				been determined to be existing. This avoids
+"				having to abort the visual selection when
+"				there's no end position and allows to use 'gv'
+"				to re-enter the previous visual mode with
+"				previously selected text. 
 "   1.10.005	19-Jul-2010	FIX: For a linewise text object, the end cursor
 "				column is not important; do not compare with the
 "				original cursor column in this case. 
@@ -114,7 +121,6 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
     let l:save_view = winsaveview()
     let [l:cursorLine, l:cursorCol] = [line('.'), col('.')] 
     let l:isSelected = 0
-    let l:initialVisualMode = visualmode()
 
     let l:save_whichwrap = &whichwrap
     set whichwrap+=h,l
@@ -128,7 +134,7 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
 		    normal! l
 		endif
 	    endif
-	    execute 'normal!' a:selectionMode
+	    let l:beginPosition = getpos('.')
 
 	    let l:endPosition = call(a:JumpToEnd, [l:count, a:isInner])
 	    if l:endPosition == [0, 0] ||
@@ -152,6 +158,7 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
 		call winrestview(l:save_view)
 	    else
 		let l:isSelected = 1
+
 		if l:isLinewise && a:isInner
 		    normal! k
 		else
@@ -161,18 +168,23 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
 			normal! l
 		    endif
 		endif
+
+		let l:endPosition = getpos('.')
+
+		" Now that we know that both begin and end positions exist,
+		" create the visual selection using the corrected positions. 
+		call setpos('.', l:beginPosition)
+		execute 'normal!' a:selectionMode
+		call setpos('.', l:endPosition)
 	    endif
 	endif
 
 	if ! l:isSelected && a:mode ==# 'v'
-	    " Re-enter visual mode if no text object could be selected. This
-	    " must not be done in operator-pending mode, or the operator would
-	    " work on the selection! 
-	    " We're using the visual mode that was active when the text object
-	    " was invoked, not the one (a:selectionMode) that the text object
-	    " would force. Otherwise, a text object that didn't work would
-	    " change the visual mode, e.g. from character-based to line-based. 
-	    execute 'normal!' l:initialVisualMode
+	    " Re-enter the previous visual mode if no text object could be
+	    " selected. 
+	    " This must not be done in operator-pending mode, or the
+	    " operator would work on the selection! 
+	    normal! gv
 	endif
     finally
 	let &whichwrap = l:save_whichwrap
