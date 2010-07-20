@@ -1,6 +1,7 @@
 " CountJump#Motion.vim: Create custom motions via repeated jumps (or searches). 
 "
 " DEPENDENCIES:
+"   - CountJump.vim autoload script. 
 "
 " Copyright: (C) 2009-2010 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -14,6 +15,10 @@
 "				Added special mode 'O' to indicate
 "				operator-pending mapping with
 "				a:isEndPatternToEnd. 
+"				Allowing to specify map modes via optional
+"				argument to CountJump#Motion#MakeBracketMotion()
+"				to allow to skip or use different patterns for
+"				some modes. 
 "	001	14-Feb-2009	Renamed from 'custommotion.vim' to
 "				'CountJump.vim' and split off motion and
 "				text object parts. 
@@ -31,7 +36,7 @@ set cpo&vim
 " This mapping scheme is extracted from $VIMRUNTIME/ftplugin/vim.vim. It
 " enhances the original mappings so that a [count] can be specified, and folds
 " at the found search position are opened. 
-function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, patternToBegin, patternToEnd, isEndPatternToEnd )
+function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, patternToBegin, patternToEnd, isEndPatternToEnd, ... )
 "*******************************************************************************
 "* PURPOSE:
 "   Define a complete set of mappings for a [x / ]x motion (e.g. like the
@@ -71,6 +76,9 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 "			e.g. a block delimited by {{{ and }}}). 
 "			Linewise motions best not set this flag, so that the
 "			end match positions the cursor in the first column. 
+"   a:mapModes		Optional string containing 'n', 'o' and/or 'v',
+"			representing the modes for which mappings should be
+"			created. Defaults to all modes. 
 "
 "* NOTES:
 "   - If your motion is linewise, the patterns should have the start of match
@@ -84,6 +92,7 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 "   None. 
 "*******************************************************************************
     let l:endMatch = (a:isEndPatternToEnd ? 'e' : '')
+    let l:mapModes = split((a:0 ? a:1 : 'nov'), '\zs')
 
     if empty(a:keyAfterBracket) && empty(a:inverseKeyAfterBracket)
 	let l:dataset = [
@@ -100,7 +109,7 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 	\   [ ']' . a:inverseKeyAfterBracket, a:patternToEnd, 'W' . l:endMatch ],
 	\]
     endif
-    for l:mode in ['n', 'v', 'o']
+    for l:mode in l:mapModes
 	for l:data in l:dataset
 	    execute escape(
 	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#CountJump(%s, %s, %s)<CR>",
