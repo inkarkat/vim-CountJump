@@ -114,6 +114,7 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
     let l:save_view = winsaveview()
     let [l:cursorLine, l:cursorCol] = [line('.'), col('.')] 
     let l:isSelected = 0
+    let l:initialVisualMode = visualmode()
 
     let l:save_whichwrap = &whichwrap
     set whichwrap+=h,l
@@ -167,7 +168,11 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, selec
 	    " Re-enter visual mode if no text object could be selected. This
 	    " must not be done in operator-pending mode, or the operator would
 	    " work on the selection! 
-	    execute 'normal!' a:selectionMode
+	    " We're using the visual mode that was active when the text object
+	    " was invoked, not the one (a:selectionMode) that the text object
+	    " would force. Otherwise, a text object that didn't work would
+	    " change the visual mode, e.g. from character-based to line-based. 
+	    execute 'normal!' l:initialVisualMode
 	endif
     finally
 	let &whichwrap = l:save_whichwrap
