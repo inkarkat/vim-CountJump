@@ -36,6 +36,25 @@
 "	001	12-Feb-2009	file creation
 
 function! CountJump#CountSearch( count, searchArguments )
+"*******************************************************************************
+"* PURPOSE:
+"   Search for the <count>th occurrence of the passed search() pattern and
+"   arguments. 
+"
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None. 
+"
+"* EFFECTS / POSTCONDITIONS:
+"   Jumps to the <count>th occurrence and opens any closed folds there. 
+"   If the pattern doesn't match (<count> times), a beep is emitted. 
+"
+"* INPUTS:
+"   a:count Number of occurrence to jump to. 
+"   a:searchArguments	Arguments to search() as a List [{pattern}, {flags}, ...]
+"
+"* RETURN VALUES: 
+"   List with the line and column position, or [0, 0], like searchpos(). 
+"*******************************************************************************
     let l:save_view = winsaveview()
     let l:searchArguments = copy(a:searchArguments)
 
