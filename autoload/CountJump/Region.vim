@@ -11,6 +11,21 @@
 "	001	21-Jul-2010	file creation
 
 function! s:SearchInLineMatching( line, pattern, isMatch )
+"******************************************************************************
+"* PURPOSE:
+"   Search for the first (depending on a:isMatch, non-)match with a:pattern in a:line. 
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None. 
+"* EFFECTS / POSTCONDITIONS:
+"   None. 
+"* INPUTS:
+"   a:line  Line in the current buffer to search. Can be an invalid one. 
+"   a:pattern	Regular expression to match. 
+"   a:isMatch	Flag whether to match. 
+"* RETURN VALUES: 
+"   Screen column of the first match, 1 in case of desired non-match, 0 if there
+"   is no (non-)match. 
+"******************************************************************************
     if a:line < 1 || a:line > line('$')
 	return 0
     endif
@@ -20,7 +35,7 @@ function! s:SearchInLineMatching( line, pattern, isMatch )
 	return 0
     endif
 
-    return l:col + 1	" Screen columns start at 1, match returns zero-based index. 
+    return (a:isMatch ? l:col + 1 : 1)	" Screen columns start at 1, match returns zero-based index. 
 endfunction
 function! s:SearchForLastLineContinuouslyMatching( startLine, pattern, isMatch, step )
 "******************************************************************************
@@ -100,7 +115,7 @@ function! CountJump#Region#SearchForRegionEnd( count, pattern, step )
     normal! zv
     return [l:line, l:col]
 endfunction
-function! CountJump#Region#SearchForNextRegion( count, pattern, step, isEnd )
+function! CountJump#Region#SearchForNextRegion( count, pattern, step, isAcrossRegion )
 "******************************************************************************
 "* PURPOSE:
 "   Starting from the current line, search for the position where the a:count'th
@@ -118,7 +133,9 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, step, isEnd )
 "		all lines belonging to it. 
 "   a:step	Increment to go to next line. Use 1 for forward, -1 for backward
 "		search. 
-"   a:isEnd	Flag whether to search for the end of the region. 
+"   a:isAcrossRegion	Flag whether to search across the region for the last
+"			(vs. first) line belonging to the region (while moving
+"			in a:step direction). 
 "* RETURN VALUES: 
 "   [ line, col ] of the (first match) in the last line that continuously (not)
 "   matches, or [0, 0] if no such (non-)match. 
@@ -134,12 +151,16 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, step, isEnd )
 	if l:isNextInRegion
 	    " We're inside a region; search for the current region's end. 
 	    let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, a:pattern, 1, a:step)
-	    if l:c == 1 && a:isEnd 
+echomsg '#### last matching' l:line
+	    if l:c == 1 && a:isAcrossRegion 
 		" We're done already! 
 		let l:isDone = 1
 	    else
-		" We've moved to the border, start the search from the next line
-		" so that we move out of the current region. 
+		" We've moved to the border, resume the search for following
+		" regions...
+		let l:c = max([l:c - 1, 1])
+		" ...from the next line so that we move out of the current
+		" region. 
 		let l:line += a:step
 	    endif
 	else
@@ -152,24 +173,30 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, step, isEnd )
     while ! l:isDone
 	" Search for the next region's start. 
 	let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, a:pattern, 0, a:step)
+echomsg '#### last non-matching' l:line
 	if l:line == 0
+echomsg '**** next region start not found'
 	    return [0, 0]
 	endif
 	let l:line += a:step
 
 	" If this is the last region to be found, we're almost done. 
 	let l:c -= 1
+echomsg '#### reduced count to' l:c
 	if l:c == 0
-	    if a:isEnd
+	    if a:isAcrossRegion
 		" Search for the current region's end. 
 		let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, a:pattern, 1, a:step)
+echomsg '#### last matching' l:line
 		if l:line == 0
+echomsg '**** current region end not found'
 		    return [0, 0]
 		endif
 	    else
 		" Check whether another region starts at the current line. 
 		let l:col = s:SearchInLineMatching(l:line, a:pattern, 1)
 		if l:col == 0
+echomsg '**** no new region start found'
 		    return [0, 0]
 		endif
 	    endif
@@ -179,7 +206,9 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, step, isEnd )
 
 	" Otherwise, we're not done; skip over the next region. 
 	let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, a:pattern, 1, a:step)
+echomsg '#### last matching' l:line
 	if l:line == 0
+echomsg '**** next region end not found'
 	    return [0, 0]
 	endif
 	let l:line += a:step
