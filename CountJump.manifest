@@ -1,0 +1,8 @@
+autoload/CountJump.vim
+autoload/CountJump/Motion.vim
+autoload/CountJump/TextObject.vim
+doc/CountJump.txt
+
+:cd $HOME/Ablage|1,.-2MkVimball! CountJump.vba
+:cd $HOME/Ablage|! "unix && gzip -f9 CountJump.vba"
+
