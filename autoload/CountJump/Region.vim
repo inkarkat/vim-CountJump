@@ -8,6 +8,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.20.003	30-Jul-2010	FIX: Removed setting of cursor position. 
 "   1.20.002	29-Jul-2010	FIX: Non-match in s:SearchInLineMatching()
 "				returned 0; now returning 1. 
 "				FIX: Must decrement count after having searched
@@ -222,8 +223,6 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, step, isAcrossRe
 	let l:line += a:step
     endwhile
 
-    call setpos('.', [0, l:line, l:col, 0])
-    normal! zv
     return [l:line, l:col]
 endfunction
 function! CountJump#Region#JumpToNextRegion( count, pattern, step, isAcrossRegion )
