@@ -1,4 +1,4 @@
-" Region.vim: summary
+" Region.vim: Move to borders of a region defined by lines matching a pattern. 
 "
 " DEPENDENCIES:
 "
@@ -8,6 +8,15 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.20.002	29-Jul-2010	FIX: Non-match in s:SearchInLineMatching()
+"				returned 0; now returning 1. 
+"				FIX: Must decrement count after having searched
+"				for the end of the region at the cursor
+"				position. 
+"				Split cursor movement from
+"				CountJump#Region#SearchForRegionEnd() and
+"				CountJump#Region#SearchForNextRegion() into
+"				separate #JumpTo...() functions. 
 "	001	21-Jul-2010	file creation
 
 function! s:SearchInLineMatching( line, pattern, isMatch )
@@ -67,6 +76,7 @@ function! s:SearchForLastLineContinuouslyMatching( startLine, pattern, isMatch, 
     endwhile
     return l:foundPosition
 endfunction
+
 function! CountJump#Region#SearchForRegionEnd( count, pattern, step )
 "******************************************************************************
 "* PURPOSE:
@@ -111,10 +121,17 @@ function! CountJump#Region#SearchForRegionEnd( count, pattern, step )
 	let l:line += a:step
     endwhile
 
-    call setpos('.', [0, l:line, l:col, 0])
-    normal! zv
     return [l:line, l:col]
 endfunction
+function! CountJump#Region#JumpToRegionEnd( count, pattern, step )
+    let l:pos = CountJump#Region#SearchForRegionEnd(a:count, a:pattern, a:step)
+    if l:pos != [0, 0]
+	call setpos('.', [0] + l:pos + [0])
+	normal! zv
+    endif
+    return l:pos
+endfunction
+
 function! CountJump#Region#SearchForNextRegion( count, pattern, step, isAcrossRegion )
 "******************************************************************************
 "* PURPOSE:
@@ -126,7 +143,7 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, step, isAcrossRe
 "* ASSUMPTIONS / PRECONDITIONS:
 "   None. 
 "* EFFECTS / POSTCONDITIONS:
-"   None. 
+"   Moves cursor to match if it exists. 
 "* INPUTS:
 "   a:count Number of regions to cover. 
 "   a:pattern	Regular expression that defines the region, i.e. must match in
@@ -151,7 +168,6 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, step, isAcrossRe
 	if l:isNextInRegion
 	    " We're inside a region; search for the current region's end. 
 	    let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, a:pattern, 1, a:step)
-echomsg '#### last matching' l:line
 	    if l:c == 1 && a:isAcrossRegion 
 		" We're done already! 
 		let l:isDone = 1
@@ -173,30 +189,24 @@ echomsg '#### last matching' l:line
     while ! l:isDone
 	" Search for the next region's start. 
 	let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, a:pattern, 0, a:step)
-echomsg '#### last non-matching' l:line
 	if l:line == 0
-echomsg '**** next region start not found'
 	    return [0, 0]
 	endif
 	let l:line += a:step
 
 	" If this is the last region to be found, we're almost done. 
 	let l:c -= 1
-echomsg '#### reduced count to' l:c
 	if l:c == 0
 	    if a:isAcrossRegion
 		" Search for the current region's end. 
 		let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, a:pattern, 1, a:step)
-echomsg '#### last matching' l:line
 		if l:line == 0
-echomsg '**** current region end not found'
 		    return [0, 0]
 		endif
 	    else
 		" Check whether another region starts at the current line. 
 		let l:col = s:SearchInLineMatching(l:line, a:pattern, 1)
 		if l:col == 0
-echomsg '**** no new region start found'
 		    return [0, 0]
 		endif
 	    endif
@@ -206,9 +216,7 @@ echomsg '**** no new region start found'
 
 	" Otherwise, we're not done; skip over the next region. 
 	let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, a:pattern, 1, a:step)
-echomsg '#### last matching' l:line
 	if l:line == 0
-echomsg '**** next region end not found'
 	    return [0, 0]
 	endif
 	let l:line += a:step
@@ -217,6 +225,14 @@ echomsg '**** next region end not found'
     call setpos('.', [0, l:line, l:col, 0])
     normal! zv
     return [l:line, l:col]
+endfunction
+function! CountJump#Region#JumpToNextRegion( count, pattern, step, isAcrossRegion )
+    let l:pos = CountJump#Region#SearchForNextRegion(a:count, a:pattern, a:step, a:isAcrossRegion)
+    if l:pos != [0, 0]
+	call setpos('.', [0] + l:pos + [0])
+	normal! zv
+    endif
+    return l:pos
 endfunction
 
 function! CountJump#Region#Jump( mode, JumpFunc, ... )
