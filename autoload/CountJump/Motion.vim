@@ -122,7 +122,103 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
     endfor
 endfunction
 
+function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfterBracket, inverseKeyAfterBracket, JumpToBeginForward, JumpToBeginBackward, JumpToEndForward, JumpToEndBackward, isEndPatternToEnd, ... )
+"*******************************************************************************
+"* PURPOSE:
+"   Define a complete set of mappings for a [x / ]x motion (e.g. like the
+"   built-in ]m "Jump to start of next method") that support an optional [count]
+"   and are driven by two functions that jump to the beginning and end of a block. 
+"   The mappings work in normal mode (jump), visual mode (expand selection) and
+"   operator-pending mode (execute operator). 
+"
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None. 
+"
+"* EFFECTS / POSTCONDITIONS:
+"   Creates mappings for normal, visual and operator-pending mode: 
+"	Normal mode: Jumps to the <count>th occurrence. 
+"	Visual mode: Extends the selection to the <count>th occurrence. 
+"	Operator-pending mode: Applies the operator to the covered text. 
+"	If the pattern doesn't match (<count> times), a beep is emitted. 
+"
+"* INPUTS:
+"   a:mapArgs	Arguments to the :map command, like '<buffer>' for a
+"		buffer-local mapping. 
+"   a:keyAfterBracket	Mapping key [sequence] after the mandatory ]/[ which
+"			start the mapping for a motion to the beginning of a
+"			block. 
+"   a:inverseKeyAfterBracket	Likewise, but for the motions to the end of a
+"				block. Usually the uppercased version of
+"				a:keyAfterBracket. 
+"   If both a:keyAfterBracket and a:inverseKeyAfterBracket are empty, the
+"   default [[ and ]] mappings are overwritten. (Note that this is different
+"   from passing ']' and '[', respectively, because the back motions are
+"   swapped.) 
+"   a:JumpToBeginForward	Function which is invoked to jump to the begin of the
+"				block in forward direction. 
+"   a:JumpToBeginBackward	Function which is invoked to jump to the begin of the
+"				block in backward direction. 
+"   a:JumpToEndForward		Function which is invoked to jump to the end of the
+"				block in forward direction. 
+"   a:JumpToEndBackward		Function which is invoked to jump to the end of the
+"				block in backward direction. 
+"   The jump functions must take one argument:
+"	JumpTo...( mode )
+"	a:mode  Mode in which the search is invoked. Either 'n', 'v' or 'o'. 
+"		With 'O': Special additional treatment for operator-pending mode
+"		with a pattern to end. 
+"   Both funcrefs must return a list [lnum, col], like searchpos(). This should
+"   be the jump position (or [0, 0] if a jump wasn't possible). 
+"   They should position the cursor to the appropriate position in the current
+"   window. 
+
+"   a:isEndPatternToEnd	Flag that specifies whether a jump to the end of a block
+"			will be to the end of the match. 
+"   a:mapModes		Optional string containing 'n', 'o' and/or 'v',
+"			representing the modes for which mappings should be
+"			created. Defaults to all modes. 
+"
+"* NOTES:
+"   - If your motion is linewise, the patterns should have the start of match
+"     at the first column. This results in the expected behavior in normal mode,
+"     and in characterwise visual mode selects up to that line, and in (more
+"     likely) linewise visual mode includes the complete end line. 
+"   - Depending on the 'selection' setting, the first matched character is
+"     either included or excluded in a characterwise visual selection. 
+"
+"* RETURN VALUES: 
+"   None. 
+"*******************************************************************************
+    let l:mapModes = split((a:0 ? a:1 : 'nov'), '\zs')
+
+    if empty(a:keyAfterBracket) && empty(a:inverseKeyAfterBracket)
+	let l:dataset = [
+	\   [ '[[', a:JumpToBeginBackward ],
+	\   [ ']]', a:JumpToBeginForward ],
+	\   [ '[]', a:JumpToEndBackward ],
+	\   [ '][', a:JumpToEndForward ],
+	\]
+    else
+	let l:dataset = [
+	\   [ '[' . a:keyAfterBracket, a:JumpToBeginBackward, ],
+	\   [ ']' . a:keyAfterBracket, a:JumpToBeginForward, ],
+	\   [ '[' . a:inverseKeyAfterBracket, a:JumpToEndBackward, ],
+	\   [ ']' . a:inverseKeyAfterBracket, a:JumpToEndForward, ],
+	\]
+    endif
+    for l:mode in l:mapModes
+	for l:data in l:dataset
+	    execute escape(
+	    \   printf("%snoremap <silent> %s %s :<C-U>call %s(%s)<CR>",
+	    \	l:mode, a:mapArgs, l:data[0],
+	    \	string(l:data[1]),
+	    \	string((l:mode ==# 'o' && a:isEndPatternToEnd) ? 'O' : l:mode)
+	    \   ), '|'
+	    \)
+	endfor
+    endfor
+endfunction
+
 let &cpo = s:save_cpo
 unlet s:save_cpo
-
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
