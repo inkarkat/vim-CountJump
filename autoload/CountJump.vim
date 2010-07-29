@@ -151,15 +151,15 @@ function! CountJump#CountJump( mode, ... )
 	return l:matchPos
     endif
 
-    let l:matchPosition = CountJump#CountSearch(v:count1, a:000)
-    if l:matchPosition != [0, 0]
+    let l:matchPos = CountJump#CountSearch(v:count1, a:000)
+    if l:matchPos != [0, 0]
 	" Add the original cursor position to the jump list. 
 	call winrestview(l:save_view)
 	normal! m'
-	call setpos('.', [0] + l:matchPosition + [0])
+	call setpos('.', [0] + l:matchPos + [0])
     endif
 
-    return l:matchPosition
+    return l:matchPos
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
