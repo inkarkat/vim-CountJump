@@ -9,7 +9,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
-"   1.11.006	21-Jul-2010	Only creating the visual selection for the text
+"   1.20.007	02-Aug-2010	The adjustment movements after the jumps to the
+"				text object boundaries now do not cause beeps if
+"				that movement cannot be done (e.g. a 'j' at the
+"				end of the buffer). 
+"   1.20.006	21-Jul-2010	Only creating the visual selection for the text
 "				object after both begin and end position have
 "				been determined to be existing. This avoids
 "				having to abort the visual selection when
@@ -133,9 +137,9 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
 	if l:beginPosition != [0, 0]
 	    if a:isExcludeBoundaries
 		if l:isLinewise
-		    normal! j
+		    silent! normal! j
 		else
-		    normal! l
+		    silent! normal! l
 		endif
 	    endif
 	    let l:beginPosition = getpos('.')
@@ -164,12 +168,12 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
 		let l:isSelected = 1
 
 		if l:isLinewise && a:isExcludeBoundaries
-		    normal! k
+		    silent! normal! k
 		else
 		    if ! l:isExclusive && a:isExcludeBoundaries
-			normal! h
+			silent! normal! h
 		    elseif l:isExclusive && ! a:isExcludeBoundaries
-			normal! l
+			silent! normal! l
 		    endif
 		endif
 
