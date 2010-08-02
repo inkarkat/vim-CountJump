@@ -9,6 +9,9 @@
 "
 " REVISION	DATE		REMARKS 
 "   1.20.003	30-Jul-2010	FIX: Removed setting of cursor position. 
+"				FIX: CountJump#Region#Jump() with mode "O"
+"				didn't add original position to jump list.
+"				Simplified conditional. 
 "   1.20.002	29-Jul-2010	FIX: Non-match in s:SearchInLineMatching()
 "				returned 0; now returning 1. 
 "				FIX: Must decrement count after having searched
@@ -267,11 +270,23 @@ function! CountJump#Region#Jump( mode, JumpFunc, ... )
 	normal! gv
     endif
 
-    if a:mode ==# 'O'
-	" Special additional treatment for operator-pending mode with a pattern
-	" to end. 
-	let l:matchPos = call(a:JumpFunc, [v:count1] + a:000)
-	if l:matchPos != [0, 0]
+    let l:matchPos = call(a:JumpFunc, [v:count1] + a:000)
+    if l:matchPos == [0, 0]
+	" Ring the bell to indicate that no match exists. 
+	"
+	" As long as this mapping does not exist, it causes a beep in both
+	" normal and visual mode. This is easier than the customary "normal!
+	" \<Esc>", which only works in normal mode. 
+	execute "normal \<Plug>RingTheBell"
+    else
+	" Add the original cursor position to the jump list. 
+	call winrestview(l:save_view)
+	normal! m'
+	call setpos('.', [0] + l:matchPos + [0])
+
+	if a:mode ==# 'O'
+	    " Special additional treatment for operator-pending mode with a pattern
+	    " to end. 
 	    " The difference between normal mode, visual and operator-pending 
 	    " mode is that in the latter, the motion must go _past_ the final
 	    " character, so that all characters are selected. This is done by
@@ -289,25 +304,8 @@ function! CountJump#Region#Jump( mode, JumpFunc, ... )
 	    set whichwrap+=l
 	    normal! l
 	    let &whichwrap = l:save_ww
-	else
-	    " TODO: beep
 	endif
-	return l:matchPos
-    endif
 
-    let l:matchPos = call(a:JumpFunc, [v:count1] + a:000)
-    if l:matchPos == [0, 0]
-	" Ring the bell to indicate that no match exists. 
-	"
-	" As long as this mapping does not exist, it causes a beep in both
-	" normal and visual mode. This is easier than the customary "normal!
-	" \<Esc>", which only works in normal mode. 
-	execute "normal \<Plug>RingTheBell"
-    else
-	" Add the original cursor position to the jump list. 
-	call winrestview(l:save_view)
-	normal! m'
-	call setpos('.', [0] + l:matchPos + [0])
     endif
 
     return l:matchPos
