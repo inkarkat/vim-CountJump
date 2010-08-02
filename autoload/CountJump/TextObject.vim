@@ -9,6 +9,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.21.008	03-Aug-2010	FIX: Must not do (characterwise) end position
+"				adaptation for linewise text object that does
+"				not exclude boundaries. 
 "   1.20.007	02-Aug-2010	The adjustment movements after the jumps to the
 "				text object boundaries now do not cause beeps if
 "				that movement cannot be done (e.g. a 'j' at the
@@ -134,6 +137,7 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
     set whichwrap+=h,l
     try
 	let l:beginPosition = call(a:JumpToBegin, [1, a:isInner])
+"****D echomsg '**** begin' string(l:beginPosition) 'cursor:' string(getpos('.'))
 	if l:beginPosition != [0, 0]
 	    if a:isExcludeBoundaries
 		if l:isLinewise
@@ -144,7 +148,9 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
 	    endif
 	    let l:beginPosition = getpos('.')
 
+"****D echomsg '**** end search from' string(l:beginPosition)
 	    let l:endPosition = call(a:JumpToEnd, [l:count, a:isInner])
+"****D echomsg '**** end  ' string(l:endPosition) 'cursor:' string(getpos('.'))
 	    if l:endPosition == [0, 0] ||
 	    \	l:endPosition[0] < l:cursorLine ||
 	    \	(! l:isLinewise && l:endPosition[0] == l:cursorLine && l:endPosition[1] < l:cursorCol)
@@ -167,8 +173,10 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
 	    else
 		let l:isSelected = 1
 
-		if l:isLinewise && a:isExcludeBoundaries
-		    silent! normal! k
+		if l:isLinewise
+		    if a:isExcludeBoundaries
+			silent! normal! k
+		    endif
 		else
 		    if ! l:isExclusive && a:isExcludeBoundaries
 			silent! normal! h
@@ -184,6 +192,7 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
 		call setpos('.', l:beginPosition)
 		execute 'normal!' a:selectionMode
 		call setpos('.', l:endPosition)
+"****D echomsg '**** text object from' string(l:beginPosition) 'to' string(l:endPosition)
 	    endif
 	endif
 
