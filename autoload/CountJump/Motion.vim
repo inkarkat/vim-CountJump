@@ -9,6 +9,21 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.20.004	30-Jul-2010	ENH: a:keyAfterBracket and
+"				a:inverseKeyAfterBracket can now be empty, the
+"				resulting mappings are then omitted. 
+"				Likewise, any jump function can be empty in
+"				CountJump#Motion#MakeBracketMotionWithJumpFunctions(). 
+"   1.20.003	21-Jul-2010	With the added
+"				CountJump#Motion#MakeBracketMotionWithJumpFunctions()
+"				motions can be defined via jump functions,
+"				similar to how text objects can be defined. This
+"				is a generalization of
+"				CountJump#Motion#MakeBracketMotion(), but the
+"				latter isn't now implemented through the
+"				generalization to avoid overhead and because the
+"				similarities are not as strong as with the text
+"				objects. 
 "   1.00.002	22-Jun-2010	Added missing :omaps for operator-pending mode. 
 "				Replaced s:Escape() with string() and simplified
 "				building of l:dataset. 
@@ -61,9 +76,12 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 "   a:keyAfterBracket	Mapping key [sequence] after the mandatory ]/[ which
 "			start the mapping for a motion to the beginning of a
 "			block. 
+"			Can be empty; the resulting mappings are then omitted. 
 "   a:inverseKeyAfterBracket	Likewise, but for the motions to the end of a
 "				block. Usually the uppercased version of
 "				a:keyAfterBracket. 
+"				Can be empty; the resulting mappings are then
+"				omitted. 
 "   If both a:keyAfterBracket and a:inverseKeyAfterBracket are empty, the
 "   default [[ and ]] mappings are overwritten. (Note that this is different
 "   from passing ']' and '[', respectively, because the back motions are
@@ -102,12 +120,15 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 	\   [ '][', a:patternToEnd, 'W' . l:endMatch ],
 	\]
     else
-	let l:dataset = [
-	\   [ '[' . a:keyAfterBracket, a:patternToBegin, 'bW' ],
-	\   [ ']' . a:keyAfterBracket, a:patternToBegin, 'W' ],
-	\   [ '[' . a:inverseKeyAfterBracket, a:patternToEnd, 'bW' . l:endMatch ],
-	\   [ ']' . a:inverseKeyAfterBracket, a:patternToEnd, 'W' . l:endMatch ],
-	\]
+	let l:dataset = []
+	if ! empty(a:keyAfterBracket)
+	    call add(l:dataset, [ '[' . a:keyAfterBracket, a:patternToBegin, 'bW' ])
+	    call add(l:dataset, [ ']' . a:keyAfterBracket, a:patternToBegin, 'W' ])
+	endif
+	if ! empty(a:inverseKeyAfterBracket)
+	    call add(l:dataset, [ '[' . a:inverseKeyAfterBracket, a:patternToEnd, 'bW' . l:endMatch ])
+	    call add(l:dataset, [ ']' . a:inverseKeyAfterBracket, a:patternToEnd, 'W' . l:endMatch ])
+	endif
     endif
     for l:mode in l:mapModes
 	for l:data in l:dataset
@@ -122,7 +143,12 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
     endfor
 endfunction
 
-function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfterBracket, inverseKeyAfterBracket, JumpToBeginForward, JumpToBeginBackward, JumpToEndForward, JumpToEndBackward, isEndPatternToEnd, ... )
+function! s:AddTupleIfValue( list, key, value )
+    if ! empty(a:value)
+	call add(a:list, [a:key, a:value])
+    endif
+endfunction
+function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfterBracket, inverseKeyAfterBracket, JumpToBeginForward, JumpToBeginBackward, JumpToEndForward, JumpToEndBackward, isEndJumpToEnd, ... )
 "*******************************************************************************
 "* PURPOSE:
 "   Define a complete set of mappings for a [x / ]x motion (e.g. like the
@@ -147,9 +173,12 @@ function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfter
 "   a:keyAfterBracket	Mapping key [sequence] after the mandatory ]/[ which
 "			start the mapping for a motion to the beginning of a
 "			block. 
+"			Can be empty; the resulting mappings are then omitted. 
 "   a:inverseKeyAfterBracket	Likewise, but for the motions to the end of a
 "				block. Usually the uppercased version of
 "				a:keyAfterBracket. 
+"				Can be empty; the resulting mappings are then
+"				omitted. 
 "   If both a:keyAfterBracket and a:inverseKeyAfterBracket are empty, the
 "   default [[ and ]] mappings are overwritten. (Note that this is different
 "   from passing ']' and '[', respectively, because the back motions are
@@ -171,48 +200,51 @@ function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfter
 "   be the jump position (or [0, 0] if a jump wasn't possible). 
 "   They should position the cursor to the appropriate position in the current
 "   window. 
+"   If no jump function is passed, the corresponding mappings are omitted. 
 
-"   a:isEndPatternToEnd	Flag that specifies whether a jump to the end of a block
-"			will be to the end of the match. 
+"   a:isEndJumpToEnd	Flag that specifies whether a jump to the end of a block
+"			will be to the last character of the block delimiter
+"			(vs. to the first character of the block delimiter or
+"			completely after the block delimiter). 
 "   a:mapModes		Optional string containing 'n', 'o' and/or 'v',
 "			representing the modes for which mappings should be
 "			created. Defaults to all modes. 
 "
 "* NOTES:
-"   - If your motion is linewise, the patterns should have the start of match
-"     at the first column. This results in the expected behavior in normal mode,
-"     and in characterwise visual mode selects up to that line, and in (more
-"     likely) linewise visual mode includes the complete end line. 
-"   - Depending on the 'selection' setting, the first matched character is
-"     either included or excluded in a characterwise visual selection. 
+"   - If your motion is linewise, the jump functions should jump to the first
+"     column. This results in the expected behavior in normal mode, and in
+"     characterwise visual mode selects up to that line, and in (more likely)
+"     linewise visual mode includes the complete end line. 
 "
 "* RETURN VALUES: 
 "   None. 
 "*******************************************************************************
     let l:mapModes = split((a:0 ? a:1 : 'nov'), '\zs')
 
+    let l:dataset = []
     if empty(a:keyAfterBracket) && empty(a:inverseKeyAfterBracket)
-	let l:dataset = [
-	\   [ '[[', a:JumpToBeginBackward ],
-	\   [ ']]', a:JumpToBeginForward ],
-	\   [ '[]', a:JumpToEndBackward ],
-	\   [ '][', a:JumpToEndForward ],
-	\]
+	call s:AddTupleIfValue(l:dataset, '[[', a:JumpToBeginBackward)
+	call s:AddTupleIfValue(l:dataset, ']]', a:JumpToBeginForward)
+	call s:AddTupleIfValue(l:dataset, '[]', a:JumpToEndBackward)
+	call s:AddTupleIfValue(l:dataset, '][', a:JumpToEndForward)
     else
-	let l:dataset = [
-	\   [ '[' . a:keyAfterBracket, a:JumpToBeginBackward, ],
-	\   [ ']' . a:keyAfterBracket, a:JumpToBeginForward, ],
-	\   [ '[' . a:inverseKeyAfterBracket, a:JumpToEndBackward, ],
-	\   [ ']' . a:inverseKeyAfterBracket, a:JumpToEndForward, ],
-	\]
+	if ! empty(a:keyAfterBracket)
+	    call s:AddTupleIfValue(l:dataset, '[' . a:keyAfterBracket, a:JumpToBeginBackward)
+	    call s:AddTupleIfValue(l:dataset, ']' . a:keyAfterBracket, a:JumpToBeginForward)
+	endif
+	if ! empty(a:inverseKeyAfterBracket)
+	    call s:AddTupleIfValue(l:dataset, '[' . a:inverseKeyAfterBracket, a:JumpToEndBackward)
+	    call s:AddTupleIfValue(l:dataset, ']' . a:inverseKeyAfterBracket, a:JumpToEndForward)
+	endif
     endif
+
     for l:mode in l:mapModes
 	for l:data in l:dataset
 	    execute escape(
 	    \   printf("%snoremap <silent> %s %s :<C-U>call %s(%s)<CR>",
 	    \	l:mode, a:mapArgs, l:data[0],
 	    \	string(l:data[1]),
-	    \	string((l:mode ==# 'o' && a:isEndPatternToEnd) ? 'O' : l:mode)
+	    \	string((l:mode ==# 'o' && a:isEndJumpToEnd) ? 'O' : l:mode)
 	    \   ), '|'
 	    \)
 	endfor
