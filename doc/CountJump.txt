@@ -34,7 +34,17 @@ This plugin contains some support for movement and text objects consisting of
 text regions that can be defined by continuous lines that match a particular
 pattern, e.g. comment blocks that all start with /^\s*#/. 
 
+SEE ALSO *
+The following ftplugins use this plugin: 
+
+diff_movement	  (vimscript #3180): Movement over diff hunks with ]] etc.
+fortunes_movement (vimscript #3181): Movement over email fortunes with ]] etc.
+help_movement     (vimscript #3179): Movement over Vim help sections with ]] etc.
+mail_movement     (vimscript #3182): Movement over email quotes with ]] etc.
+
+
 RELATED WORKS *
+
 - motpat.vim (vimscript #3030) offers similar functions to setup motion
   mappings, but no text objects (yet). 
 - textobj-user (vimscript #2100) has support for user-defined text objects via
@@ -109,38 +119,31 @@ CountJump#Motion#MakeBracketMotionWithJumpFunctions(). >
 EXAMPLE							   *CountJump-example*
 
 Let's illustrate the usage by developing custom motions and text objects for
-an email fortune file, which contains blocks of text delimited by lines
-containing a "-- " marker. 
+Pascal begin..end blocks. 
 
-
-We want to move around fortunes, and override the default section movements
-for it: 
-]]			Go to [count] next start of a fortune. 
-][			Go to [count] next end of a fortune. 
-[[			Go to [count] previous start of a fortune. 
-[]			Go to [count] previous end of a fortune. 
+We want to move around blocks, and override the default section movements for
+it: 
+]]			Go to [count] next start of a block. 
+][			Go to [count] next end of a block. 
+[[			Go to [count] previous start of a block. 
+[]			Go to [count] previous end of a block. 
 >
-    call CountJump#Motion#MakeBracketMotion('<buffer>', '', '', '^-- \?\n\zs', '^.*\n-- \?$', 0)
+    call CountJump#Motion#MakeBracketMotion('<buffer>', '', '', '\c^begin\n\zs', '\c^.*\nend', 0)
 The begin pattern positions the cursor on the beginning of the line following
-the fortune separator '^-- \?', the end pattern on the beginning of the line
-preceding a separator. 
+the "begin" keyword, the end pattern on the beginning of the line
+preceding the "end" keyword. 
 
 
-We want to select a fortune, either including or excluding the preceding
-separator line: 
-if			"inner fortune" text object, select [count] fortunes,
-			excluding the fortune separator. 
-af			"a fortune" text object, select [count] fortunes, including
-			the preceding fortune separator. 
+We want to select a block, either including or excluding the lines with the
+begin..end keywords: 
+ib			"inner block" text object, select [count] contents of
+			a block. 
+ab			"a block" text object, select [count] blocks. 
 >
-    call CountJump#TextObject#MakeWithCountSearch('<buffer>', 'f', 'i', 'V', '^-- \?$', '^-- \?$\|\%$')
-    call CountJump#TextObject#MakeWithCountSearch('<buffer>', 'f', 'a', 'V', '^-- \?$', '\ze.\n-- \?$\|\%$')
-The fortune text objects are linewise, and end either with a final separator
-or the end of the file. 
+    call CountJump#TextObject#MakeWithCountSearch('<buffer>', 'b', 'ai', 'V', '\c^begin\n', '\c^end.*$')
 
-
-If there is a filetype detection for fortune files, we can simply put the
-above calls in a ~/.vim/ftplugin/fortunes_movement.vim script and are done. 
+If there is a filetype detection for Pascal files, we can simply put the
+above calls in a ~/.vim/ftplugin/pascal_movement.vim script and are done. 
 
 ==============================================================================
 INSTALLATION					       *CountJump-installation*
@@ -184,6 +187,15 @@ IDEAS							      *CountJump-ideas*
 
 ==============================================================================
 HISTORY							    *CountJump-history*
+
+1.21	03-Aug-2010
+- FIX: A 2]] jump inside a region (unless last line) jumped like a 1]] jump.
+  The search for next region must not decrease the iteration counter when
+  _not_ searching _across_ the region. 
+- FIX: Must not do (characterwise) end position adaptation for linewise text
+  object that does not exclude boundaries. 
+- Switched example from email fortunes to Pascal begin..end blocks, as they
+  are conceptually easier. 
 
 1.20	02-Aug-2010
 - ENH: In CountJump#Motion#MakeBracketMotion(), a:keyAfterBracket and
