@@ -314,7 +314,18 @@ function! CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, type
 "			the complete lines matching the pattern. 
 "   a:patternToBegin	Search pattern to locate the beginning of a block. 
 "   a:patternToEnd	Search pattern to locate the end of a block. 
-"
+"			Note: The patterns should always match a non-empty
+"			boundary text; zero-width or matches at the end of the
+"			buffer are problematic. 
+"			Note: Inner text objects first make an outer jump, then
+"			go to the other (inner) side of the boundary text in
+"			order to make a selection when the cursor is on the
+"			boundary text, so fancy patterns that take the current
+"			position into account are problematic, too. 
+"			If this simple matching doesn't work for you, define
+"			your own jump function and graduate to the more powerful
+"			CountJump#TextObject#MakeWithJumpFunctions() function
+"			instead. 
 "* RETURN VALUES: 
 "   None. 
 "*******************************************************************************
