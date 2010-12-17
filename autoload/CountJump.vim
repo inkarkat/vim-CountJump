@@ -8,6 +8,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.20.009	30-Jul-2010	FIX: CountJump#CountJump() with mode "O" didn't
+"				add original position to jump list. Simplified
+"				conditional. 
 "   1.10.008	15-Jul-2010	Changed behavior if there aren't [count]
 "				matches: Instead of jumping to the last
 "				available match (and ringing the bell), the
@@ -125,11 +128,16 @@ function! CountJump#CountJump( mode, ... )
 	normal! gv
     endif
 
-    if a:mode ==# 'O'
-	" Special additional treatment for operator-pending mode with a pattern
-	" to end. 
-	let l:matchPos = CountJump#CountSearch(v:count1, a:000)
-	if l:matchPos != [0, 0]
+    let l:matchPos = CountJump#CountSearch(v:count1, a:000)
+    if l:matchPos != [0, 0]
+	" Add the original cursor position to the jump list. 
+	call winrestview(l:save_view)
+	normal! m'
+	call setpos('.', [0] + l:matchPos + [0])
+
+	if a:mode ==# 'O'
+	    " Special additional treatment for operator-pending mode with a pattern
+	    " to end. 
 	    " The difference between normal mode, visual and operator-pending 
 	    " mode is that in the latter, the motion must go _past_ the final
 	    " character, so that all characters are selected. This is done by
@@ -148,15 +156,6 @@ function! CountJump#CountJump( mode, ... )
 	    normal! l
 	    let &whichwrap = l:save_ww
 	endif
-	return l:matchPos
-    endif
-
-    let l:matchPos = CountJump#CountSearch(v:count1, a:000)
-    if l:matchPos != [0, 0]
-	" Add the original cursor position to the jump list. 
-	call winrestview(l:save_view)
-	normal! m'
-	call setpos('.', [0] + l:matchPos + [0])
     endif
 
     return l:matchPos
