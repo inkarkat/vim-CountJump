@@ -8,6 +8,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.21.004	03-Aug-2010	FIX: A 2]] jump inside a region (unless last
+"				line) jumped like a 1]] jump. The search for
+"				next region must not decrease the iteration
+"				counter when _not_ searching _across_ the
+"				region. 
 "   1.20.003	30-Jul-2010	FIX: Removed setting of cursor position. 
 "				FIX: CountJump#Region#Jump() with mode "O"
 "				didn't add original position to jump list.
@@ -168,19 +173,26 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, step, isAcrossRe
     " Check whether we're currently on the border of a region. 
     let l:isInRegion = (s:SearchInLineMatching(l:line, a:pattern, 1) != 0)
     let l:isNextInRegion = (s:SearchInLineMatching((l:line + a:step), a:pattern, 1) != 0)
+"****D echomsg '**** in region:' (l:isInRegion ? 'current' : '') (l:isNextInRegion ? 'next' : '')
     if l:isInRegion
 	if l:isNextInRegion
 	    " We're inside a region; search for the current region's end. 
 	    let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, a:pattern, 1, a:step)
-	    if l:c == 1 && a:isAcrossRegion 
-		" We're done already! 
-		let l:isDone = 1
+	    if a:isAcrossRegion
+		if l:c == 1
+		    " We're done already! 
+		    let l:isDone = 1
+		else
+		    " We've moved to the border, resume the search for following
+		    " regions...
+		    let l:c = max([l:c - 1, 1])
+		    " ...from the next line so that we move out of the current
+		    " region. 
+		    let l:line += a:step
+		endif
 	    else
-		" We've moved to the border, resume the search for following
-		" regions...
-		let l:c = max([l:c - 1, 1])
-		" ...from the next line so that we move out of the current
-		" region. 
+		" We're on the border, start the search from the next line so
+		" that we move out of the current region. 
 		let l:line += a:step
 	    endif
 	else
@@ -190,6 +202,7 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, step, isAcrossRe
 	endif
     endif
 
+"****D echomsg '**** starting iteration on line' l:line
     while ! l:isDone
 	" Search for the next region's start. 
 	let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, a:pattern, 0, a:step)
@@ -199,6 +212,7 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, step, isAcrossRe
 	let l:line += a:step
 
 	" If this is the last region to be found, we're almost done. 
+"****D echomsg '**** iteration' l:c 'on line' l:line
 	let l:c -= 1
 	if l:c == 0
 	    if a:isAcrossRegion
