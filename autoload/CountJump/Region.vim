@@ -8,6 +8,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.30.006	18-Dec-2010	Moved CountJump#Region#Jump() to CountJump.vim
+"				as CountJump#JumpFunc(). It fits there much
+"				better because of the similarity to
+"				CountJump#CountJump(), and actually has nothing
+"				to do with regions. 
 "   1.30.005	18-Dec-2010	ENH: Added a:isMatch argument to
 "				CountJump#Region#SearchForRegionEnd(),
 "				CountJump#Region#JumpToRegionEnd(),
@@ -261,80 +266,6 @@ function! CountJump#Region#JumpToNextRegion( count, pattern, isMatch, step, isAc
 	normal! zv
     endif
     return l:pos
-endfunction
-
-function! CountJump#Region#Jump( mode, JumpFunc, ... )
-"*******************************************************************************
-"* PURPOSE:
-"   Implement a custom motion by jumping to the <count>th occurrence of the
-"   passed pattern. 
-"
-"* ASSUMPTIONS / PRECONDITIONS:
-"   None. 
-"
-"* EFFECTS / POSTCONDITIONS:
-"   Normal mode: Jumps to the <count>th occurrence. 
-"   Visual mode: Extends the selection to the <count>th occurrence. 
-"   If the jump doesn't work, a beep is emitted. 
-"
-"* INPUTS:
-"   a:mode  Mode in which the search is invoked. Either 'n', 'v' or 'o'. 
-"	    With 'O': Special additional treatment for operator-pending mode
-"	    with a pattern to end. 
-"   a:JumpFunc		Function which is invoked to jump. 
-"   The jump function must take at least one argument:
-"	a:count	Number of matches to jump to. 
-"   It can take more arguments which must then be passed in here: 
-"   ...	    Arguments to the passed a:JumpFunc
-"
-"* RETURN VALUES: 
-"   List with the line and column position, or [0, 0], like searchpos(). 
-"*******************************************************************************
-    let l:save_view = winsaveview()
-
-    if a:mode ==# 'v'
-	normal! gv
-    endif
-
-    let l:matchPos = call(a:JumpFunc, [v:count1] + a:000)
-    if l:matchPos == [0, 0]
-	" Ring the bell to indicate that no match exists. 
-	"
-	" As long as this mapping does not exist, it causes a beep in both
-	" normal and visual mode. This is easier than the customary "normal!
-	" \<Esc>", which only works in normal mode. 
-	execute "normal \<Plug>RingTheBell"
-    else
-	" Add the original cursor position to the jump list. 
-	call winrestview(l:save_view)
-	normal! m'
-	call setpos('.', [0] + l:matchPos + [0])
-
-	if a:mode ==# 'O'
-	    " Special additional treatment for operator-pending mode with a pattern
-	    " to end. 
-	    " The difference between normal mode, visual and operator-pending 
-	    " mode is that in the latter, the motion must go _past_ the final
-	    " character, so that all characters are selected. This is done by
-	    " appending a 'l' motion after the search. 
-	    "
-	    " In operator-pending mode, the 'l' motion only works properly
-	    " at the end of the line (i.e. when the moved-over "word" is at
-	    " the end of the line) when the 'l' motion is allowed to move
-	    " over to the next line. Thus, the 'l' motion is added
-	    " temporarily to the global 'whichwrap' setting. 
-	    " Without this, the motion would leave out the last character in
-	    " the line. I've also experimented with temporarily setting
-	    " "set virtualedit=onemore", but that didn't work. 
-	    let l:save_ww = &whichwrap
-	    set whichwrap+=l
-	    normal! l
-	    let &whichwrap = l:save_ww
-	endif
-
-    endif
-
-    return l:matchPos
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
