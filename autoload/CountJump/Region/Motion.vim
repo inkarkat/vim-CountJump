@@ -85,10 +85,11 @@ function! CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, i
     for l:mode in l:mapModes
 	for l:data in l:dataset
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#Region#JumpToNextRegion(v:count1, %s, %d, %d, %d)<CR>",
+	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#JumpFunc(%s, 'CountJump#Region#JumpToNextRegion', %s, %d, %d, %d)<CR>",
 	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
 	    \	    a:mapArgs,
 	    \	    l:data[0],
+	    \	    string(l:mode),
 	    \	    string(a:pattern),
 	    \	    a:isMatch,
 	    \	    l:data[1],
