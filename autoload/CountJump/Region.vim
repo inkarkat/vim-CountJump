@@ -259,10 +259,13 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, isMatch, step, i
 
     return [l:line, l:col]
 endfunction
-function! CountJump#Region#JumpToNextRegion( count, pattern, isMatch, step, isAcrossRegion )
+function! CountJump#Region#JumpToNextRegion( count, pattern, isMatch, step, isAcrossRegion, isToEndOfLine )
     let l:pos = CountJump#Region#SearchForNextRegion(a:count, a:pattern, a:isMatch, a:step, a:isAcrossRegion)
     if l:pos != [0, 0]
 	call setpos('.', [0] + l:pos + [0])
+	if a:isToEndOfLine
+	    normal! $
+	endif
 	normal! zv
     endif
     return l:pos
