@@ -188,33 +188,27 @@ function! CountJump#JumpFunc( mode, JumpFunc, ... )
 "	a:count	Number of matches to jump to. 
 "   It can take more arguments which must then be passed in here: 
 "   ...	    Arguments to the passed a:JumpFunc
-"   The jump function must return a list [lnum, col], like searchpos(). This should
-"   be the jump position (or [0, 0] if a jump wasn't possible). 
-"   It should position the cursor to the appropriate position in the current
-"   window. 
+"   The jump function should position the cursor to the appropriate position in
+"   the current window. It is expected to beep and keep the cursor at its
+"   original position when no appropriate position can be found. 
 "
 "* RETURN VALUES: 
-"   List with the line and column position, or [0, 0], like searchpos(). 
+"   None. 
 "*******************************************************************************
     let l:save_view = winsaveview()
+    let l:originalPosition = getpos('.')
 
     if a:mode ==# 'v'
 	normal! gv
     endif
 
-    let l:matchPos = call(a:JumpFunc, [v:count1] + a:000)
-    if l:matchPos == [0, 0]
-	" Ring the bell to indicate that no match exists. 
-	"
-	" As long as this mapping does not exist, it causes a beep in both
-	" normal and visual mode. This is easier than the customary "normal!
-	" \<Esc>", which only works in normal mode. 
-	execute "normal \<Plug>RingTheBell"
-    else
+    call call(a:JumpFunc, [v:count1] + a:000)
+    let l:matchPosition = getpos('.')
+    if l:matchPosition != l:originalPosition
 	" Add the original cursor position to the jump list. 
 	call winrestview(l:save_view)
 	normal! m'
-	call setpos('.', [0] + l:matchPos + [0])
+	call setpos('.', l:matchPosition)
 
 	if a:mode ==# 'O'
 	    " Special additional treatment for operator-pending mode with a
@@ -237,10 +231,7 @@ function! CountJump#JumpFunc( mode, JumpFunc, ... )
 	    normal! l
 	    let &whichwrap = l:save_ww
 	endif
-
     endif
-
-    return l:matchPos
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
