@@ -9,6 +9,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.22.005	06-Aug-2010	No more motion mappings for select mode; as the
+"				mappings start with a printable character, no
+"				select-mode mapping should be defined. 
 "   1.20.004	30-Jul-2010	ENH: a:keyAfterBracket and
 "				a:inverseKeyAfterBracket can now be empty, the
 "				resulting mappings are then omitted. 
@@ -134,9 +137,12 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 	for l:data in l:dataset
 	    execute escape(
 	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#CountJump(%s, %s, %s)<CR>",
-	    \	l:mode, a:mapArgs, l:data[0],
-	    \	string((l:mode ==# 'o' && a:isEndPatternToEnd) ? 'O' : l:mode),
-	    \	string(l:data[1]), string(l:data[2])
+	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
+	    \	    a:mapArgs,
+	    \	    l:data[0],
+	    \	    string((l:mode ==# 'o' && a:isEndPatternToEnd) ? 'O' : l:mode),
+	    \	    string(l:data[1]),
+	    \	    string(l:data[2])
 	    \   ), '|'
 	    \)
 	endfor
@@ -242,9 +248,11 @@ function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfter
 	for l:data in l:dataset
 	    execute escape(
 	    \   printf("%snoremap <silent> %s %s :<C-U>call %s(%s)<CR>",
-	    \	l:mode, a:mapArgs, l:data[0],
-	    \	string(l:data[1]),
-	    \	string((l:mode ==# 'o' && a:isEndJumpToEnd) ? 'O' : l:mode)
+	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
+	    \	    a:mapArgs,
+	    \	    l:data[0],
+	    \	    string(l:data[1]),
+	    \	    string((l:mode ==# 'o' && a:isEndJumpToEnd) ? 'O' : l:mode)
 	    \   ), '|'
 	    \)
 	endfor
