@@ -95,27 +95,23 @@ Often, a region can be defined as a block of continuous lines that all match a
 certain pattern. The following functions aid in implementing movements to the
 boundaries of these regions and text objects consisting of the region: 
 
-CountJump#Region#JumpToRegionEnd( count, pattern, step )
+CountJump#Region#JumpToRegionEnd( count, pattern, isMatch, step, isToEndOfLine )
 
 Starting from the current line, search for the position where the count'th
 region ends. Use this function to build Funcrefs for forward / backward jumps
 that can then be passed to CountJump#TextObject#MakeWithJumpFunctions(). 
 
-CountJump#Region#JumpToNextRegion( count, pattern, step, isAcrossRegion )
+CountJump#Region#JumpToNextRegion( count, pattern, isMatch, step, isAcrossRegion, isToEndOfLine )
 
 Starting from the current line, search for the position where the count'th
 region begins/ends. 
 
-CountJump#Region#Jump( mode, JumpFunc, ... )
+CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, pattern, isMatch, ... )
 
-Implement a custom motion by jumping to the <count>th occurrence of the passed
-pattern. This function allows to implement jump functions working on text
-regions. These can then be passed to
-CountJump#Motion#MakeBracketMotionWithJumpFunctions(). >
-    function! s:JumpToBeginForward( mode )
-	return CountJump#Region#Jump(a:mode, function('CountJump#Region#JumpToNextRegion'), '^\s*#', 1, 0)
-    endfunction
-<
+This function sets up mappings starting with [ and ] for movement (with
+optional [count]) relative to the current cursor position, targeting a text
+region defined by contiguous lines that (don't) match a:pattern. 
+
 ==============================================================================
 EXAMPLE							   *CountJump-example*
 
@@ -188,6 +184,24 @@ IDEAS							      *CountJump-ideas*
 
 ==============================================================================
 HISTORY							    *CountJump-history*
+
+1.30	20-Dec-2010
+- ENH: Added CountJump#Region#Motion#MakeBracketMotion() to easily define
+  bracket motions for regions. 
+- Interface changes: 
+  - Jump functions don't necessarily return jump position any more; this
+    special case is only required for text objects. 
+  - Moved CountJump#Region#Jump() to CountJump#JumpFunc(). 
+  - Added a:isToEndOfLine argument to CountJump#Region#JumpToRegionEnd() and
+    CountJump#Region#JumpToNextRegion(), which is useful for operator-pending
+    and characterwise visual mode mappings; the entire last line will then be
+    operated on / selected. 
+  - Added a:isMatch argument to CountJump#Region#SearchForRegionEnd(),
+    CountJump#Region#JumpToRegionEnd(),
+    CountJump#Region#SearchForNextRegion(),
+    CountJump#Region#JumpToNextRegion(). This allows definition of regions via
+    non-matches, which can be substantially simpler (and faster to match) than
+    coming up with a "negative" regular expression.
 
 1.22	06-Aug-2010
 - No more motion mappings and text objects for select mode; as the mappings
