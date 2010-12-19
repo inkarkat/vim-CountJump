@@ -9,6 +9,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.22.009	06-Aug-2010	No more text objects for select mode; as the
+"				mappings start with a printable character ("a" /
+"				"i"), no select-mode mapping should be defined. 
 "   1.21.008	03-Aug-2010	FIX: Must not do (characterwise) end position
 "				adaptation for linewise text object that does
 "				not exclude boundaries. 
@@ -270,7 +273,15 @@ function! CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, ty
 	for l:mode in ['o', 'v']
 	    execute escape(
 	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#TextObject#TextObjectWithJumpFunctions('%s', %s, %s, '%s', %s, %s)<CR>",
-	    \   l:mode, a:mapArgs, (tolower(l:type) . a:textObjectKey), l:mode, l:isInner, l:isExcludeBoundaries, a:selectionMode, string(a:JumpToBegin), string(a:JumpToEnd)
+	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
+	    \	    a:mapArgs,
+	    \	    (tolower(l:type) . a:textObjectKey),
+	    \	    l:mode,
+	    \	    l:isInner,
+	    \	    l:isExcludeBoundaries,
+	    \	    a:selectionMode,
+	    \	    string(a:JumpToBegin),
+	    \	    string(a:JumpToEnd)
 	    \   ), '|'
 	    \)
 	endfor
