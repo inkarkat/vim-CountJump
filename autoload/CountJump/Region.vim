@@ -8,6 +8,18 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.30.007	19-Dec-2010	Shuffling of responsibilities in
+"				CountJump#JumpFunc():
+"				CountJump#Region#JumpToRegionEnd() and
+"				CountJump#Region#JumpToNextRegion() now need to
+"				beep themselves if no match is found, but do not
+"				return the position any more. 
+"				Added a:isToEndOfLine argument to
+"				CountJump#Region#JumpToRegionEnd() and
+"				CountJump#Region#JumpToNextRegion(), which is
+"				useful for operator-pending and characterwise
+"				visual mode mappings; the entire last line will
+"				then be operated on / selected. 
 "   1.30.006	18-Dec-2010	Moved CountJump#Region#Jump() to CountJump.vim
 "				as CountJump#JumpFunc(). It fits there much
 "				better because of the similarity to
@@ -41,6 +53,23 @@
 "				CountJump#Region#SearchForNextRegion() into
 "				separate #JumpTo...() functions. 
 "	001	21-Jul-2010	file creation
+
+function! s:DoJump( position, isToEndOfLine )
+    if a:position == [0, 0]
+	" Ring the bell to indicate that no further match exists. 
+	"
+	" As long as this mapping does not exist, it causes a beep in both
+	" normal and visual mode. This is easier than the customary "normal!
+	" \<Esc>", which only works in normal mode. 
+	execute "normal \<Plug>RingTheBell"
+    else
+	call setpos('.', [0] + a:position + [0])
+	if a:isToEndOfLine
+	    normal! $
+	endif
+	normal! zv
+    endif
+endfunction
 
 function! s:SearchInLineMatching( line, pattern, isMatch )
 "******************************************************************************
@@ -147,13 +176,9 @@ function! CountJump#Region#SearchForRegionEnd( count, pattern, isMatch, step )
 
     return [l:line, l:col]
 endfunction
-function! CountJump#Region#JumpToRegionEnd( count, pattern, isMatch, step )
-    let l:pos = CountJump#Region#SearchForRegionEnd(a:count, a:pattern, a:isMatch, a:step)
-    if l:pos != [0, 0]
-	call setpos('.', [0] + l:pos + [0])
-	normal! zv
-    endif
-    return l:pos
+function! CountJump#Region#JumpToRegionEnd( count, pattern, isMatch, step, isToEndOfLine )
+    let l:position = CountJump#Region#SearchForRegionEnd(a:count, a:pattern, a:isMatch, a:step)
+    call s:DoJump(l:position, a:isToEndOfLine)
 endfunction
 
 function! CountJump#Region#SearchForNextRegion( count, pattern, isMatch, step, isAcrossRegion )
@@ -260,15 +285,8 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, isMatch, step, i
     return [l:line, l:col]
 endfunction
 function! CountJump#Region#JumpToNextRegion( count, pattern, isMatch, step, isAcrossRegion, isToEndOfLine )
-    let l:pos = CountJump#Region#SearchForNextRegion(a:count, a:pattern, a:isMatch, a:step, a:isAcrossRegion)
-    if l:pos != [0, 0]
-	call setpos('.', [0] + l:pos + [0])
-	if a:isToEndOfLine
-	    normal! $
-	endif
-	normal! zv
-    endif
-    return l:pos
+    let l:position = CountJump#Region#SearchForNextRegion(a:count, a:pattern, a:isMatch, a:step, a:isAcrossRegion)
+    call s:DoJump(l:position, a:isToEndOfLine)
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
