@@ -3,9 +3,9 @@
 			 COUNT JUMP    by Ingo Karkat
 								*CountJump.vim*
 description			|CountJump-description|
-usage	    			|CountJump-usage|
-example	    			|CountJump-example|
-installation   			|CountJump-installation|
+usage				|CountJump-usage|
+example				|CountJump-example|
+installation			|CountJump-installation|
 limitations			|CountJump-limitations|
 known problems			|CountJump-known-problems|
 todo				|CountJump-todo|
@@ -35,6 +35,7 @@ text regions that can be defined by continuous lines that match a particular
 pattern, e.g. comment blocks that all start with /^\s*#/. 
 
 SEE ALSO *
+
 The following ftplugins use this plugin: 
 
 diff_movement	  (vimscript #3180): Movement over diff hunks with ]] etc.
@@ -148,13 +149,13 @@ above calls in a ~/.vim/ftplugin/pascal_movement.vim script and are done.
 ==============================================================================
 INSTALLATION					       *CountJump-installation*
 
-This script is packaged as a|vimball|. If you have the "gunzip" decompressor
+This script is packaged as a |vimball|. If you have the "gunzip" decompressor
 in your PATH, simply edit the *.vba.gz package in Vim; otherwise, decompress
 the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
-vimball or via the|:UseVimball|command. >
+vimball or via the |:UseVimball| command. >
     vim CountJump.vba.gz
     :so %
-To uninstall, use the|:RmVimball|command. 
+To uninstall, use the |:RmVimball| command. 
 
 DEPENDENCIES					       *CountJump-dependencies*
 
@@ -187,6 +188,10 @@ IDEAS							      *CountJump-ideas*
 
 ==============================================================================
 HISTORY							    *CountJump-history*
+
+1.22	06-Aug-2010
+- No more motion mappings and text objects for select mode; as the mappings
+  start with a printable character, no select-mode mapping should be defined. 
 
 1.21	03-Aug-2010
 - FIX: A 2]] jump inside a region (unless last line) jumped like a 1]] jump.
@@ -232,7 +237,7 @@ First published version.
 Started development. 
 
 ==============================================================================
-Copyright: (C) 2009-2010 by Ingo Karkat
+Copyright: (C) 2009-2010 Ingo Karkat
 The VIM LICENSE applies to this script; see|copyright|. 
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
