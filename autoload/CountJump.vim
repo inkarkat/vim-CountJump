@@ -8,6 +8,17 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.30.011	19-Dec-2010	Removed return value of jump position from
+"				CountJump#CountJump() and CountJump#JumpFunc();
+"				it isn't needed, as these functions are
+"				typically used directly in motion mappings. 
+"				CountJump#JumpFunc() now uses cursor position
+"				after invoking jump function, and doesn't
+"				require a returned position any more. This is
+"				only a special case for CountJump#TextObject,
+"				and should not be generally required of a jump
+"				function. The jump function is now also expected
+"				to beep, so removed that here. 
 "   1.30.010	18-Dec-2010	Moved CountJump#Region#Jump() here as
 "				CountJump#JumpFunc(). It fits here much better
 "				because of the similarity to
@@ -67,8 +78,8 @@ function! CountJump#CountSearch( count, searchArguments )
     let l:searchArguments = copy(a:searchArguments)
 
     for l:i in range(1, a:count)
-	let l:matchPos = call('searchpos', l:searchArguments)
-	if l:matchPos == [0, 0]
+	let l:matchPosition = call('searchpos', l:searchArguments)
+	if l:matchPosition == [0, 0]
 	    if l:i > 1
 		" (Due to the count,) we've already moved to an intermediate
 		" match. Undo that to behave like the old vi-compatible
@@ -85,7 +96,7 @@ function! CountJump#CountSearch( count, searchArguments )
 	    " \<Esc>", which only works in normal mode. 
 	    execute "normal \<Plug>RingTheBell"
 
-	    return l:matchPos
+	    return l:matchPosition
 	endif
 
 	if len(l:searchArguments) > 1 && l:i == 1
@@ -102,7 +113,7 @@ function! CountJump#CountSearch( count, searchArguments )
     " a match inside a closed fold. 
     normal! zv
 
-    return l:matchPos
+    return l:matchPosition
 endfunction
 function! CountJump#CountJump( mode, ... )
 "*******************************************************************************
@@ -125,7 +136,7 @@ function! CountJump#CountJump( mode, ... )
 "   ...	    Arguments to search(). 
 "
 "* RETURN VALUES: 
-"   List with the line and column position, or [0, 0], like searchpos(). 
+"   None. 
 "*******************************************************************************
     let l:save_view = winsaveview()
 
@@ -133,12 +144,12 @@ function! CountJump#CountJump( mode, ... )
 	normal! gv
     endif
 
-    let l:matchPos = CountJump#CountSearch(v:count1, a:000)
-    if l:matchPos != [0, 0]
+    let l:matchPosition = CountJump#CountSearch(v:count1, a:000)
+    if l:matchPosition != [0, 0]
 	" Add the original cursor position to the jump list. 
 	call winrestview(l:save_view)
 	normal! m'
-	call setpos('.', [0] + l:matchPos + [0])
+	call setpos('.', [0] + l:matchPosition + [0])
 
 	if a:mode ==# 'O'
 	    " Special additional treatment for operator-pending mode with a pattern
@@ -162,8 +173,6 @@ function! CountJump#CountJump( mode, ... )
 	    let &whichwrap = l:save_ww
 	endif
     endif
-
-    return l:matchPos
 endfunction
 function! CountJump#JumpFunc( mode, JumpFunc, ... )
 "*******************************************************************************
@@ -189,8 +198,9 @@ function! CountJump#JumpFunc( mode, JumpFunc, ... )
 "   It can take more arguments which must then be passed in here: 
 "   ...	    Arguments to the passed a:JumpFunc
 "   The jump function should position the cursor to the appropriate position in
-"   the current window. It is expected to beep and keep the cursor at its
-"   original position when no appropriate position can be found. 
+"   the current window, and open any folds there. It is expected to beep and
+"   keep the cursor at its original position when no appropriate position can be
+"   found. 
 "
 "* RETURN VALUES: 
 "   None. 
