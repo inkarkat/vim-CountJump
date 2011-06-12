@@ -8,6 +8,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.40.008	20-Dec-2010	Jump functions again return position (and
+"				actual, corrected one for a:isToEndOfLine).
+"				Though the position is not used for motions, it
+"				is necessary for text objects to differentiate
+"				between "already at the begin/end position" and
+"				"no such position". 
 "   1.30.007	19-Dec-2010	Shuffling of responsibilities in
 "				CountJump#JumpFunc():
 "				CountJump#Region#JumpToRegionEnd() and
@@ -65,10 +71,14 @@ function! s:DoJump( position, isToEndOfLine )
     else
 	call setpos('.', [0] + a:position + [0])
 	if a:isToEndOfLine
-	    normal! $
+	    normal! $zv
+	    return getpos('.')[1:2]
+	else
+	    normal! zv
 	endif
-	normal! zv
     endif
+    
+    return a:position
 endfunction
 
 function! s:SearchInLineMatching( line, pattern, isMatch )
@@ -178,7 +188,7 @@ function! CountJump#Region#SearchForRegionEnd( count, pattern, isMatch, step )
 endfunction
 function! CountJump#Region#JumpToRegionEnd( count, pattern, isMatch, step, isToEndOfLine )
     let l:position = CountJump#Region#SearchForRegionEnd(a:count, a:pattern, a:isMatch, a:step)
-    call s:DoJump(l:position, a:isToEndOfLine)
+    return s:DoJump(l:position, a:isToEndOfLine)
 endfunction
 
 function! CountJump#Region#SearchForNextRegion( count, pattern, isMatch, step, isAcrossRegion )
@@ -286,7 +296,7 @@ function! CountJump#Region#SearchForNextRegion( count, pattern, isMatch, step, i
 endfunction
 function! CountJump#Region#JumpToNextRegion( count, pattern, isMatch, step, isAcrossRegion, isToEndOfLine )
     let l:position = CountJump#Region#SearchForNextRegion(a:count, a:pattern, a:isMatch, a:step, a:isAcrossRegion)
-    call s:DoJump(l:position, a:isToEndOfLine)
+    return s:DoJump(l:position, a:isToEndOfLine)
 endfunction
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
