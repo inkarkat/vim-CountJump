@@ -112,6 +112,15 @@ This function sets up mappings starting with [ and ] for movement (with
 optional [count]) relative to the current cursor position, targeting a text
 region defined by contiguous lines that (don't) match a:pattern. 
 
+CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selectionMode, pattern, isMatch )
+
+Defines a complete set of mappings for inner and/or outer text objects that
+support an optional [count] and select regions of lines which are defined by
+contiguous lines that (don't) match a:pattern. 
+The inner text object comprises all lines of the region itself, while the
+outer text object also includes all adjacent lines above and below which do
+not themselves belong to a region. 
+
 ==============================================================================
 EXAMPLE							   *CountJump-example*
 
@@ -184,6 +193,17 @@ IDEAS							      *CountJump-ideas*
 
 ==============================================================================
 HISTORY							    *CountJump-history*
+
+1.41	13-Jun-2011
+- FIX: Directly ring the bell to avoid problems when running under :silent!. 
+
+1.40	20-Dec-2010
+- ENH: Added CountJump#Region#TextObject#Make() to easily define text objects
+  for regions. 
+- Interface change: Jump functions again return position (and actual,
+  corrected one for a:isToEndOfLine). Though the position is not used for
+  motions, it is necessary for text objects to differentiate between "already
+  at the begin/end position" and "no such position".  
 
 1.30	20-Dec-2010
 - ENH: Added CountJump#Region#Motion#MakeBracketMotion() to easily define
