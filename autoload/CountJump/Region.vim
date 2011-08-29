@@ -99,7 +99,14 @@ function! s:SearchInLineMatching( line, pattern, isMatch )
 	return 0
     endif
 
-    let l:col = match(getline(a:line), a:pattern)
+    if type(a:pattern) == type('')
+	let l:col = match(getline(a:line), a:pattern)
+    elseif type(a:pattern) == 2 " Funcref
+	let l:col = call(a:pattern, [a:line])
+    else
+	throw 'ASSERT: Wrong type, must be either a regexp or a Funcref'
+    endif
+
     if (l:col == -1 && a:isMatch) || (l:col != -1 && ! a:isMatch)
 	return 0
     endif
