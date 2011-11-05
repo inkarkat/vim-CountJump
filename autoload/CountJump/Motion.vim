@@ -9,6 +9,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.30.006	19-Dec-2010	Clarified interface of jump function arguments;
+"				no need to return jump position here. 
 "   1.22.005	06-Aug-2010	No more motion mappings for select mode; as the
 "				mappings start with a printable character, no
 "				select-mode mapping should be defined. 
@@ -202,10 +204,8 @@ function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfter
 "	a:mode  Mode in which the search is invoked. Either 'n', 'v' or 'o'. 
 "		With 'O': Special additional treatment for operator-pending mode
 "		with a pattern to end. 
-"   Both funcrefs must return a list [lnum, col], like searchpos(). This should
-"   be the jump position (or [0, 0] if a jump wasn't possible). 
-"   They should position the cursor to the appropriate position in the current
-"   window. 
+"   All Funcrefs should position the cursor to the appropriate position in the
+"   current window. 
 "   If no jump function is passed, the corresponding mappings are omitted. 
 
 "   a:isEndJumpToEnd	Flag that specifies whether a jump to the end of a block
