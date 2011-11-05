@@ -10,6 +10,8 @@
 " REVISION	DATE		REMARKS 
 "   1.50.010	30-Aug-2011	Also support a match()-like Funcref instead of a
 "				pattern to define the range. 
+"				Initialize global g:CountJump_Context object for
+"				custom use by Funcrefs. 
 "   1.41.009	13-Jun-2011	FIX: Directly ring the bell to avoid problems
 "				when running under :silent!. 
 "   1.40.008	20-Dec-2010	Jump functions again return position (and
@@ -174,6 +176,8 @@ function! CountJump#Region#SearchForRegionEnd( count, Expr, isMatch, step )
 "******************************************************************************
     let l:c = a:count
     let l:line = line('.')
+    let g:CountJump_Context = {}
+
     while 1
 	" Search for the current region's end. 
 	let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, a:Expr, a:isMatch, a:step)
@@ -236,6 +240,7 @@ function! CountJump#Region#SearchForNextRegion( count, Expr, isMatch, step, isAc
     let l:c = a:count
     let l:isDone = 0
     let l:line = line('.')
+    let g:CountJump_Context = {}
 
     " Check whether we're currently on the border of a region. 
     let l:isInRegion = (s:SearchInLineMatching(l:line, a:Expr, a:isMatch) != 0)
