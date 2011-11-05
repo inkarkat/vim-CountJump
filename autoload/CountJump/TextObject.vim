@@ -3,12 +3,14 @@
 " DEPENDENCIES:
 "   - CountJump.vim autoload script. 
 "
-" Copyright: (C) 2009-2010 Ingo Karkat
+" Copyright: (C) 2009-2011 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.50.011	30-Aug-2011	Initialize global g:CountJump_Context object for
+"				custom use by Funcrefs. 
 "   1.40.010	20-Dec-2010	Replaced s:Escape() function with string(). 
 "   1.22.009	06-Aug-2010	No more text objects for select mode; as the
 "				mappings start with a printable character ("a" /
@@ -132,6 +134,7 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
     let l:save_view = winsaveview()
     let [l:cursorLine, l:cursorCol] = [line('.'), col('.')] 
     let l:isSelected = 0
+    let g:CountJump_Context = {}
 
     let l:save_whichwrap = &whichwrap
     set whichwrap+=h,l
