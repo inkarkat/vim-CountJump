@@ -1,4 +1,4 @@
-" Region.vim: Move to borders of a region defined by lines matching a pattern. 
+" CountJump/Region.vim: Move to borders of a region defined by lines matching a pattern. 
 "
 " DEPENDENCIES:
 "
