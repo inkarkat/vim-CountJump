@@ -1,4 +1,4 @@
-" TextObject.vim: Create custom text objects via jumps over matching lines. 
+" CountJump/Region/TextObject.vim: Create custom text objects via jumps over matching lines. 
 "
 " DEPENDENCIES:
 "   - CountJump/Region.vim, CountJump/TextObjects.vim autoload scripts. 
