@@ -1,4 +1,4 @@
-" CountJump#TextObject.vim: Create custom text objects via repeated jumps (or searches). 
+" CountJump/TextObject.vim: Create custom text objects via repeated jumps (or searches). 
 "
 " DEPENDENCIES:
 "   - CountJump.vim autoload script. 
