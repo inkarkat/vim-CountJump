@@ -1,4 +1,4 @@
-" CountJump#Motion.vim: Create custom motions via repeated jumps (or searches). 
+" CountJump/Motion.vim: Create custom motions via repeated jumps (or searches). 
 "
 " DEPENDENCIES:
 "   - CountJump.vim autoload script. 
