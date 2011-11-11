@@ -1,4 +1,4 @@
-" CountJump#Region#Motion.vim: Create custom motions via jumps over matching
+" CountJump/Region/Motion.vim: Create custom motions via jumps over matching
 " lines. 
 "
 " DEPENDENCIES:
