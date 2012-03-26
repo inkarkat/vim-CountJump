@@ -122,4 +122,4 @@ function! CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selec
     return CountJump#TextObject#MakeWithJumpFunctions(a:mapArgs, a:textObjectKey, l:types, a:selectionMode, s:function(l:functionToBeginName), s:function(l:functionToEndName))
 endfunction
 
-" vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
+" vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
