@@ -45,6 +45,8 @@ help_movement     (vimscript #3179): Movement over Vim help sections with ]] etc
 mail_movement     (vimscript #3182): Movement over email quotes with ]] etc.
 JumpToTrailingWhitespace (vimscript #3968): Motions to locate unwanted
 					    whitespace at the end of lines.
+TaskMotion        (vimscript #3990): Motions to task and TODO markers.
+ConflictMotion    (vimscript #3991): Motions to and inside SCM conflict markers.
 
 RELATED WORKS								     *
 
