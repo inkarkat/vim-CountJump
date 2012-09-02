@@ -242,6 +242,14 @@ IDEAS							      *CountJump-ideas*
 ==============================================================================
 HISTORY							    *CountJump-history*
 
+1.70	17-Aug-2012
+- ENH: Check for searches wrapping around the buffer and issue a corresponding
+  warning, like the built-in searches do. Though the mappings that can be made
+  with CountJump currently do not use 'wrapscan', other plugins that define
+  their own jump functions and use the CountJump#CountJump() function for it
+  may use it. Create function overloads CountJump#CountJumpWithWrapMessage()
+  and CountJump#CountSearchWithWrapMessage().
+
 1.60	27-Mar-2012
 - ENH: Allow motions that do not start with [ / ] and text objects that do not
   start with i / a by passing keys that begin with <Plug>. With this, plugins
