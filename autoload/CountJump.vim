@@ -8,6 +8,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.71.014	15-Sep-2012	Also handle move to the buffer's very last
+"				character in operator-pending mode with a
+"				pattern to end "O" motion by temporarily setting
+"				'virtualedit' to "onemore".
 "   1.70.013	17-Aug-2012	ENH: Check for searches wrapping around the
 "				buffer and issue a corresponding warning, like
 "				the built-in searches do. Though the mappings
@@ -196,22 +200,32 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 	if a:mode ==# 'O'
 	    " Special additional treatment for operator-pending mode with a pattern
 	    " to end.
-	    " The difference between normal mode, visual and operator-pending
-	    " mode is that in the latter, the motion must go _past_ the final
-	    " character, so that all characters are selected. This is done by
-	    " appending a 'l' motion after the search.
+	    " The difference between normal mode, operator-pending and visual
+	    " mode is that in the latter two, the motion must go _past_ the
+	    " final "word" character, so that all characters of the "word" are
+	    " selected. This is done by appending a 'l' motion after the
+	    " search for the next "word".
 	    "
 	    " In operator-pending mode, the 'l' motion only works properly
 	    " at the end of the line (i.e. when the moved-over "word" is at
 	    " the end of the line) when the 'l' motion is allowed to move
 	    " over to the next line. Thus, the 'l' motion is added
-	    " temporarily to the global 'whichwrap' setting.
-	    " Without this, the motion would leave out the last character in
-	    " the line. I've also experimented with temporarily setting
-	    " "set virtualedit=onemore", but that didn't work.
+	    " temporarily to the global 'whichwrap' setting. Without this,
+	    " the motion would leave out the last character in the line.
 	    let l:save_ww = &whichwrap
 	    set whichwrap+=l
-	    normal! l
+	    if line('.') == line('$') && &virtualedit !=# 'onemore' && &virtualedit !=# 'all'
+		" For the last line in the buffer, that still doesn't work,
+		" unless we can do virtual editing.
+		let l:save_ve = &virtualedit
+		set virtualedit=onemore
+		normal! l
+		augroup TempVirtualEdit
+		    execute 'autocmd! CursorMoved * set virtualedit=' . l:save_ve . ' | autocmd! TempVirtualEdit'
+		augroup END
+	    else
+		normal! l
+	    endif
 	    let &whichwrap = l:save_ww
 	endif
     endif
@@ -268,22 +282,32 @@ function! CountJump#JumpFunc( mode, JumpFunc, ... )
 	if a:mode ==# 'O'
 	    " Special additional treatment for operator-pending mode with a
 	    " characterwise jump.
-	    " The difference between normal mode, visual and operator-pending
-	    " mode is that in the latter, the motion must go _past_ the final
-	    " character, so that all characters are selected. This is done by
-	    " appending a 'l' motion after the search.
+	    " The difference between normal mode, operator-pending and visual
+	    " mode is that in the latter two, the motion must go _past_ the
+	    " final "word" character, so that all characters of the "word" are
+	    " selected. This is done by appending a 'l' motion after the
+	    " search for the next "word".
 	    "
 	    " In operator-pending mode, the 'l' motion only works properly
 	    " at the end of the line (i.e. when the moved-over "word" is at
 	    " the end of the line) when the 'l' motion is allowed to move
 	    " over to the next line. Thus, the 'l' motion is added
-	    " temporarily to the global 'whichwrap' setting.
-	    " Without this, the motion would leave out the last character in
-	    " the line. I've also experimented with temporarily setting
-	    " "set virtualedit=onemore", but that didn't work.
+	    " temporarily to the global 'whichwrap' setting. Without this,
+	    " the motion would leave out the last character in the line.
 	    let l:save_ww = &whichwrap
 	    set whichwrap+=l
-	    normal! l
+	    if line('.') == line('$') && &virtualedit !=# 'onemore' && &virtualedit !=# 'all'
+		" For the last line in the buffer, that still doesn't work,
+		" unless we can do virtual editing.
+		let l:save_ve = &virtualedit
+		set virtualedit=onemore
+		normal! l
+		augroup TempVirtualEdit
+		    execute 'autocmd! CursorMoved * set virtualedit=' . l:save_ve . ' | autocmd! TempVirtualEdit'
+		augroup END
+	    else
+		normal! l
+	    endif
 	    let &whichwrap = l:save_ww
 	endif
     endif
