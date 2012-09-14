@@ -242,6 +242,12 @@ IDEAS							      *CountJump-ideas*
 ==============================================================================
 HISTORY							    *CountJump-history*
 
+1.71	14-Sep-2012
+- FIX: In CountJump#TextObject#TextObjectWithJumpFunctions(), do not beep when
+  there's no end position. In this case, the jump function (often
+  CountJump#CountSearch()) should have emitted a beep already, and we want to
+  avoid a double beep.
+
 1.70	03-Sep-2012
 - ENH: Check for searches wrapping around the buffer and issue a corresponding
   warning, like the built-in searches do. Though the mappings that can be made
