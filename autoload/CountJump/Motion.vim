@@ -214,8 +214,8 @@ function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfter
 "   The jump functions must take one argument:
 "	JumpTo...( mode )
 "	a:mode  Mode in which the search is invoked. Either 'n', 'v' or 'o'. 
-"		With 'O': Special additional treatment for operator-pending mode
-"		with a pattern to end. 
+"		Uppercase letters indicate special additional treatment for end
+"		jump to end.
 "   All Funcrefs should position the cursor to the appropriate position in the
 "   current window. 
 "   If no jump function is passed, the corresponding mappings are omitted. 
@@ -264,7 +264,7 @@ function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfter
 	    \	    a:mapArgs,
 	    \	    l:data[0],
 	    \	    string(l:data[1]),
-	    \	    string((l:mode ==# 'o' && a:isEndJumpToEnd) ? 'O' : l:mode)
+	    \	    string(a:isEndJumpToEnd ? toupper(l:mode) : l:mode)
 	    \   ), '|'
 	    \)
 	endfor
