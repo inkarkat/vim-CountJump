@@ -2,16 +2,21 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2009-2011 Ingo Karkat
+" Copyright: (C) 2009-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
-"   1.71.014	15-Sep-2012	Also handle move to the buffer's very last
+"   1.80.014	15-Sep-2012	Also handle move to the buffer's very last
 "				character in operator-pending mode with a
 "				pattern to end "O" motion by temporarily setting
 "				'virtualedit' to "onemore".
+"				Add CountJump#CountJumpFuncWithWrapMessage() /
+"				CountJump#CountJumpFunc() to help implement
+"				custom motions with only a simple function that
+"				performs a single jump. (Used by the
+"				SameSyntaxMotion plugin.)
 "   1.70.013	17-Aug-2012	ENH: Check for searches wrapping around the
 "				buffer and issue a corresponding warning, like
 "				the built-in searches do. Though the mappings
@@ -81,15 +86,15 @@ endfunction
 function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArguments )
 "*******************************************************************************
 "* PURPOSE:
-"   Search for the <count>th occurrence of the passed search() pattern and
+"   Search for the a:count'th occurrence of the passed search() pattern and
 "   arguments.
 "
 "* ASSUMPTIONS / PRECONDITIONS:
 "   None.
 "
 "* EFFECTS / POSTCONDITIONS:
-"   Jumps to the <count>th occurrence and opens any closed folds there.
-"   If the pattern doesn't match (<count> times), a beep is emitted.
+"   Jumps to the a:count'th occurrence and opens any closed folds there.
+"   If the pattern doesn't match (a:count times), a beep is emitted.
 "
 "* INPUTS:
 "   a:count Number of occurrence to jump to.
@@ -170,7 +175,7 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 "* EFFECTS / POSTCONDITIONS:
 "   Normal mode: Jumps to the <count>th occurrence.
 "   Visual mode: Extends the selection to the <count>th occurrence.
-"   If the pattern doesn't match (<count> times), a beep is emitted.
+"   If the pattern doesn't match (a:count times), a beep is emitted.
 "
 "* INPUTS:
 "   a:mode  Mode in which the search is invoked. Either 'n', 'v' or 'o'.
@@ -311,6 +316,81 @@ function! CountJump#JumpFunc( mode, JumpFunc, ... )
 	    let &whichwrap = l:save_ww
 	endif
     endif
+endfunction
+function! CountJump#CountJumpFuncWithWrapMessage( count, searchName, isBackward, SingleJumpFunc, ... )
+"*******************************************************************************
+"* PURPOSE:
+"   Invoke a:JumpFunc and its arguments a:count'th times.
+"   This function can be passed to CountJump#JumpFunc() to implement a custom
+"   motion with a simple jump function that only performs single jumps.
+"
+"* ASSUMPTIONS / PRECONDITIONS:
+"   None.
+"
+"* EFFECTS / POSTCONDITIONS:
+"   Jumps a:count times and opens any closed folds there.
+"   If it cannot jump (<count> times), a beep is emitted.
+"
+"* INPUTS:
+"   a:count Number of occurrence to jump to.
+"   a:searchName    Object to be searched; used as the subject in the message
+"		    when the search wraps: "a:searchName hit BOTTOM, continuing
+"		    at TOP". When empty, no wrap message is issued.
+"   a:SingleJumpFunc    Function which is invoked to perform a single jump.
+"   It can take more arguments which must then be passed in here:
+"   ...	    Arguments to the passed a:JumpFunc
+"   The jump function should position the cursor to the appropriate position in
+"   the current window and return the position. It is expected to keep the
+"   cursor at its original position and return [0, 0] when no appropriate
+"   position can be found.
+"
+"* RETURN VALUES:
+"   List with the line and column position, or [0, 0], like searchpos().
+"*******************************************************************************
+    let l:save_view = winsaveview()
+    let l:isWrapped = 0
+    let [l:prevLine, l:prevCol] = [line('.'), col('.')]
+"****D echomsg '****' a:currentSyntaxId.':' string(synIDattr(a:currentSyntaxId, 'name')) 'colored in' synIDattr(a:currentHlgroupId, 'name')
+    for l:i in range(1, a:count)
+	let l:matchPosition = call(a:SingleJumpFunc, a:000)
+	if l:matchPosition == [0, 0]
+	    if l:i > 1
+		" (Due to the count,) we've already moved to an intermediate
+		" match. Undo that to behave like the old vi-compatible
+		" motions. (Only the ]s motion has different semantics; it obeys
+		" the 'wrapscan' setting and stays at the last possible match if
+		" the setting is off.)
+		call winrestview(l:save_view)
+	    endif
+
+	    " Ring the bell to indicate that no further match exists.
+	    execute "normal! \<C-\>\<C-n>\<Esc>"
+
+	    return l:matchPosition
+	endif
+
+	if ! a:isBackward && (l:prevLine > l:matchPosition[0] || l:prevLine == l:matchPosition[0] && l:prevCol >= l:matchPosition[1])
+	    let l:isWrapped = 1
+	elseif a:isBackward && (l:prevLine < l:matchPosition[0] || l:prevLine == l:matchPosition[0] && l:prevCol <= l:matchPosition[1])
+	    let l:isWrapped = 1
+	endif
+	let [l:prevLine, l:prevCol] = l:matchPosition
+    endfor
+
+    " Open the fold at the final search result. This makes the search work like
+    " the built-in motions, and avoids that some visual selections get stuck at
+    " a match inside a closed fold.
+    normal! zv
+
+    if l:isWrapped && ! empty(a:searchName)
+	redraw
+	call s:WrapMessage(a:searchName, a:isBackward)
+    endif
+
+    return l:matchPosition
+endfunction
+function! CountJump#CountJumpFunc( count, SingleJumpFunc, ... )
+    return call('CountJump#CountJumpFuncWithWrapMessage', [a:count, '', 0, a:SingleJumpFunc] + a:000)
 endfunction
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
