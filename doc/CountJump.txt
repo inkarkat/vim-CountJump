@@ -242,7 +242,7 @@ IDEAS							      *CountJump-ideas*
 ==============================================================================
 HISTORY							    *CountJump-history*
 
-1.80	15-Sep-2012
+1.80	17-Sep-2012
 - FIX: In CountJump#TextObject#TextObjectWithJumpFunctions(), do not beep when
   there's no end position. In this case, the jump function (often
   CountJump#CountSearch()) should have emitted a beep already, and we want to
@@ -252,6 +252,11 @@ HISTORY							    *CountJump-history*
 - Add CountJump#CountJumpFuncWithWrapMessage() / CountJump#CountJumpFunc() to
   help implement custom motions with only a simple function that performs a
   single jump.
+- FIX: Visual end pattern / jump to end with 'selection' set to "exclusive"
+  also requires the special additional treatment of moving one right, like
+  operator-pending mode.
+- BUG: Operator-pending motion with end pattern / jump to end operates on one
+  character too few when moving to begin.
 
 1.70	03-Sep-2012
 - ENH: Check for searches wrapping around the buffer and issue a corresponding
