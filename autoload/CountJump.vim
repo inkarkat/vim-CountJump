@@ -8,6 +8,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.80.015	17-Sep-2012	FIX: Visual end pattern / jump to end with
+"				'selection' set to "exclusive" also requires the
+"				special additional treatment of moving one
+"				right, like operator-pending mode.
 "   1.80.014	15-Sep-2012	Also handle move to the buffer's very last
 "				character in operator-pending mode with a
 "				pattern to end "O" motion by temporarily setting
@@ -179,8 +183,8 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 "
 "* INPUTS:
 "   a:mode  Mode in which the search is invoked. Either 'n', 'v' or 'o'.
-"	    With 'O': Special additional treatment for operator-pending mode
-"	    with a pattern to end.
+"	    Uppercase letters indicate special additional treatment for end
+"	    patterns to end.
 "   a:searchName    Object to be searched; used as the subject in the message
 "		    when the search wraps: "a:searchName hit BOTTOM, continuing
 "		    at TOP". When empty, no wrap message is issued.
@@ -191,7 +195,7 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 "*******************************************************************************
     let l:save_view = winsaveview()
 
-    if a:mode ==# 'v'
+    if a:mode ==? 'v'
 	normal! gv
     endif
 
@@ -202,26 +206,25 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 	normal! m'
 	call setpos('.', [0] + l:matchPosition + [0])
 
-	if a:mode ==# 'O'
-	    " Special additional treatment for operator-pending mode with a pattern
-	    " to end.
+	if a:mode ==# 'V' && &selection ==# 'exclusive' || a:mode ==# 'O'
+	    " Special additional treatment for end patterns to end.
 	    " The difference between normal mode, operator-pending and visual
-	    " mode is that in the latter two, the motion must go _past_ the
-	    " final "word" character, so that all characters of the "word" are
-	    " selected. This is done by appending a 'l' motion after the
-	    " search for the next "word".
+	    " mode with 'selection' set to "exclusive" is that in the latter
+	    " two, the motion must go _past_ the final "word" character, so that
+	    " all characters of the "word" are selected. This is done by
+	    " appending a 'l' motion after the search for the next "word".
 	    "
-	    " In operator-pending mode, the 'l' motion only works properly
-	    " at the end of the line (i.e. when the moved-over "word" is at
-	    " the end of the line) when the 'l' motion is allowed to move
-	    " over to the next line. Thus, the 'l' motion is added
-	    " temporarily to the global 'whichwrap' setting. Without this,
-	    " the motion would leave out the last character in the line.
+	    " The 'l' motion only works properly at the end of the line (i.e.
+	    " when the moved-over "word" is at the end of the line) when the 'l'
+	    " motion is allowed to move over to the next line. Thus, the 'l'
+	    " motion is added temporarily to the global 'whichwrap' setting.
+	    " Without this, the motion would leave out the last character in the
+	    " line.
 	    let l:save_ww = &whichwrap
 	    set whichwrap+=l
-	    if line('.') == line('$') && &virtualedit !=# 'onemore' && &virtualedit !=# 'all'
-		" For the last line in the buffer, that still doesn't work,
-		" unless we can do virtual editing.
+	    if a:mode ==# 'O' && line('.') == line('$') && &virtualedit !=# 'onemore' && &virtualedit !=# 'all'
+		" For the last line in the buffer, that still doesn't work in
+		" operator-pending mode, unless we can do virtual editing.
 		let l:save_ve = &virtualedit
 		set virtualedit=onemore
 		normal! l
@@ -254,8 +257,8 @@ function! CountJump#JumpFunc( mode, JumpFunc, ... )
 "
 "* INPUTS:
 "   a:mode  Mode in which the search is invoked. Either 'n', 'v' or 'o'.
-"	    With 'O': Special additional treatment for operator-pending mode
-"	    with a characterwise jump.
+"	    Uppercase letters indicate special additional treatment for end jump
+"	    to end.
 "   a:JumpFunc		Function which is invoked to jump.
 "   The jump function must take at least one argument:
 "	a:count	Number of matches to jump to.
@@ -272,7 +275,7 @@ function! CountJump#JumpFunc( mode, JumpFunc, ... )
     let l:save_view = winsaveview()
     let l:originalPosition = getpos('.')
 
-    if a:mode ==# 'v'
+    if a:mode ==? 'v'
 	normal! gv
     endif
 
@@ -284,24 +287,23 @@ function! CountJump#JumpFunc( mode, JumpFunc, ... )
 	normal! m'
 	call setpos('.', l:matchPosition)
 
-	if a:mode ==# 'O'
-	    " Special additional treatment for operator-pending mode with a
-	    " characterwise jump.
+	if a:mode ==# 'V' && &selection ==# 'exclusive' || a:mode ==# 'O'
+	    " Special additional treatment for end jumps to end.
 	    " The difference between normal mode, operator-pending and visual
-	    " mode is that in the latter two, the motion must go _past_ the
-	    " final "word" character, so that all characters of the "word" are
-	    " selected. This is done by appending a 'l' motion after the
-	    " search for the next "word".
+	    " mode with 'selection' set to "exclusive" is that in the latter
+	    " two, the motion must go _past_ the final "word" character, so that
+	    " all characters of the "word" are selected. This is done by
+	    " appending a 'l' motion after the search for the next "word".
 	    "
-	    " In operator-pending mode, the 'l' motion only works properly
-	    " at the end of the line (i.e. when the moved-over "word" is at
-	    " the end of the line) when the 'l' motion is allowed to move
-	    " over to the next line. Thus, the 'l' motion is added
-	    " temporarily to the global 'whichwrap' setting. Without this,
-	    " the motion would leave out the last character in the line.
+	    " The 'l' motion only works properly at the end of the line (i.e.
+	    " when the moved-over "word" is at the end of the line) when the 'l'
+	    " motion is allowed to move over to the next line. Thus, the 'l'
+	    " motion is added temporarily to the global 'whichwrap' setting.
+	    " Without this, the motion would leave out the last character in the
+	    " line.
 	    let l:save_ww = &whichwrap
 	    set whichwrap+=l
-	    if line('.') == line('$') && &virtualedit !=# 'onemore' && &virtualedit !=# 'all'
+	    if a:mode ==# 'O' && line('.') == line('$') && &virtualedit !=# 'onemore' && &virtualedit !=# 'all'
 		" For the last line in the buffer, that still doesn't work,
 		" unless we can do virtual editing.
 		let l:save_ve = &virtualedit
