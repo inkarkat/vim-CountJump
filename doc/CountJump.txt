@@ -225,6 +225,10 @@ KNOWN PROBLEMS					     *CountJump-known-problems*
 - For blockwise text objects, the original cursor position should be required
   to be inside the selection. However, this requires translation of the
   byte-indices here into screen columns, and is thus non-trivial to implement.
+- The behavior with wrap messages is slightly inconsistent: Like normal
+  /pattern search, we print the wrap message, but don't print an error message
+  (like "Pattern not found"), but beep instead (like the built-in ]m etc.
+  mappings (but not the ), }, ]] mappings, which fail silently?!)).
 
 TODO							       *CountJump-todo*
 
@@ -242,7 +246,7 @@ IDEAS							      *CountJump-ideas*
 ==============================================================================
 HISTORY							    *CountJump-history*
 
-1.80	17-Sep-2012
+1.80	18-Sep-2012
 - FIX: In CountJump#TextObject#TextObjectWithJumpFunctions(), do not beep when
   there's no end position. In this case, the jump function (often
   CountJump#CountSearch()) should have emitted a beep already, and we want to
@@ -257,6 +261,8 @@ HISTORY							    *CountJump-history*
   operator-pending mode.
 - BUG: Operator-pending motion with end pattern / jump to end operates on one
   character too few when moving to begin.
+- Clear any previous wrap message when wrapping is enabled; it's confusing
+  otherwise.
 
 1.70	03-Sep-2012
 - ENH: Check for searches wrapping around the buffer and issue a corresponding
