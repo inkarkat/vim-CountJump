@@ -229,6 +229,8 @@ KNOWN PROBLEMS					     *CountJump-known-problems*
   /pattern search, we print the wrap message, but don't print an error message
   (like "Pattern not found"), but beep instead (like the built-in ]m etc.
   mappings (but not the ), }, ]] mappings, which fail silently?!)).
+- A repeat (via |.|) of the operator-pending mapping loses the previously
+  given [count], and operates on just one search / jump.
 
 TODO							       *CountJump-todo*
 
