@@ -8,6 +8,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.80.016	18-Sep-2012	Clear any previous wrap message when wrapping is
+"				enabled; it's confusing otherwise.
 "   1.80.015	17-Sep-2012	FIX: Visual end pattern / jump to end with
 "				'selection' set to "exclusive" also requires the
 "				special additional treatment of moving one
@@ -157,9 +159,16 @@ function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArgumen
     " a match inside a closed fold.
     normal! zv
 
-    if l:isWrapped && ! empty(a:searchName)
-	redraw
-	call s:WrapMessage(a:searchName, l:isBackward)
+    if ! empty(a:searchName)
+	if l:isWrapped
+	    redraw
+	    call s:WrapMessage(a:searchName, a:isBackward)
+	else
+	    " We need to clear any previous wrap message; it's confusing
+	    " otherwise. /pattern searches do not have that problem, as they
+	    " echo the search pattern.
+	    echo
+	endif
     endif
 
     return l:matchPosition
@@ -384,9 +393,16 @@ function! CountJump#CountJumpFuncWithWrapMessage( count, searchName, isBackward,
     " a match inside a closed fold.
     normal! zv
 
-    if l:isWrapped && ! empty(a:searchName)
-	redraw
-	call s:WrapMessage(a:searchName, a:isBackward)
+    if ! empty(a:searchName)
+	if l:isWrapped
+	    redraw
+	    call s:WrapMessage(a:searchName, a:isBackward)
+	else
+	    " We need to clear any previous wrap message; it's confusing
+	    " otherwise. /pattern searches do not have that problem, as they
+	    " echo the search pattern.
+	    echo
+	endif
     endif
 
     return l:matchPosition
