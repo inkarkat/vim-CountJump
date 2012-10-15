@@ -248,7 +248,7 @@ IDEAS							      *CountJump-ideas*
 ==============================================================================
 HISTORY							    *CountJump-history*
 
-1.80	18-Sep-2012
+1.80	15-Oct-2012
 - FIX: In CountJump#TextObject#TextObjectWithJumpFunctions(), do not beep when
   there's no end position. In this case, the jump function (often
   CountJump#CountSearch()) should have emitted a beep already, and we want to
