@@ -236,17 +236,20 @@ TODO							       *CountJump-todo*
 
 IDEAS							      *CountJump-ideas*
 
-- Add configuration to change behavior when there are no [count] matches:
-  1. obey the 'wrapscan' option, like |]s| and/or
-  2. jump as many matches as possible, still beep to indicate the actual
-     target was not reached
-
 - Add customization parameter so that the motion / text object includes the
   start / end of buffer in case patternToBegin / patternToEnd do not match any
   more.
 
 ==============================================================================
 HISTORY							    *CountJump-history*
+
+1.81	16-Oct-2012
+- ENH: Add optional a:searchName argument to
+  CountJump#Motion#MakeBracketMotion() to make searches wrap around when
+  'wrapscan' is set. Custom jump functions can do this since version 1.70;
+  now, this can also be utilized by motions defined via a search pattern.
+- BUG: Wrong variable scope for copied a:isBackward in
+  CountJump#CountSearchWithWrapMessage().
 
 1.80	15-Oct-2012
 - FIX: In CountJump#TextObject#TextObjectWithJumpFunctions(), do not beep when
