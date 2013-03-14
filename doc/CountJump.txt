@@ -243,6 +243,13 @@ IDEAS							      *CountJump-ideas*
 ==============================================================================
 HISTORY							    *CountJump-history*
 
+1.82	30-Oct-2012
+- FIX: In text objects, when the end position is before the begin position,
+  that's not a valid selection. Test for this and abort in that case.
+- For linewise selections, always position the cursor at the start of the end
+  line to be consistent with the built-in text objects, and to avoid
+  complicating the search patterns when attempting to do this through them.
+
 1.81	16-Oct-2012
 - ENH: Add optional a:searchName argument to
   CountJump#Motion#MakeBracketMotion() to make searches wrap around when
