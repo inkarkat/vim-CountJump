@@ -8,6 +8,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.81.017	15-Oct-2012	BUG: Wrong variable scope for copied
+"				a:isBackward in
+"				CountJump#CountSearchWithWrapMessage().
 "   1.80.016	18-Sep-2012	Clear any previous wrap message when wrapping is
 "				enabled; it's confusing otherwise.
 "   1.80.015	17-Sep-2012	FIX: Visual end pattern / jump to end with
@@ -162,7 +165,7 @@ function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArgumen
     if ! empty(a:searchName)
 	if l:isWrapped
 	    redraw
-	    call s:WrapMessage(a:searchName, a:isBackward)
+	    call s:WrapMessage(a:searchName, l:isBackward)
 	else
 	    " We need to clear any previous wrap message; it's confusing
 	    " otherwise. /pattern searches do not have that problem, as they
