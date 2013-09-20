@@ -243,6 +243,9 @@ IDEAS							      *CountJump-ideas*
 ==============================================================================
 HISTORY							    *CountJump-history*
 
+1.83	RELEASEME
+- Minor: Make substitute() robust against 'ignorecase'.
+
 1.82	30-Oct-2012
 - FIX: In text objects, when the end position is before the begin position,
   that's not a valid selection. Test for this and abort in that case.
@@ -378,7 +381,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2009-2012 Ingo Karkat
+Copyright: (C) 2009-2013 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
