@@ -2,12 +2,14 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2009-2012 Ingo Karkat
+" Copyright: (C) 2009-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.83.018	14-Jun-2013	Minor: Make substitute() robust against
+"				'ignorecase'.
 "   1.81.017	15-Oct-2012	BUG: Wrong variable scope for copied
 "				a:isBackward in
 "				CountJump#CountSearchWithWrapMessage().
@@ -144,7 +146,7 @@ function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArgumen
 	    " (i.e. search(..., 'c')), the flag must only be active on the very
 	    " first iteration; otherwise, all subsequent iterations will just
 	    " stay put at the current match.
-	    let l:searchArguments[1] = substitute(l:searchArguments[1], 'c', '', 'g')
+	    let l:searchArguments[1] = substitute(l:searchArguments[1], '\Cc', '', 'g')
 	endif
 
 	" Note: No need to check s:searchArguments and 'wrapscan'; the wrapping
