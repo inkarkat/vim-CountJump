@@ -59,6 +59,9 @@ RELATED WORKS								     *
   mappings, but no text objects (yet).
 - textobj-user (vimscript #2100) has support for user-defined text objects via
   regular expressions.
+- movealong.vim (vimscript #4691) provides a :Movealong command (and optional
+  mappings) that repeatedly executes a motion until a condition of a syntax,
+  pattern match, or arbitrary expression is met.
 
 ==============================================================================
 USAGE							      *CountJump-usage*
