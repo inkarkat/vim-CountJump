@@ -9,6 +9,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.81.009	16-Oct-2012	ENH: Add optional a:searchName argument to
+"				CountJump#Motion#MakeBracketMotion() to make
+"				searches wrap around when 'wrapscan' is set.
+"				Custom jump functions can do this since version
+"				1.70; now, this can also be utilized by motions
+"				defined via a search pattern.
 "   1.80.008	17-Sep-2012	FIX: Visual end pattern / jump to end with
 "				'selection' set to "exclusive" also requires the
 "				special additional treatment of moving one
@@ -120,6 +126,10 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 "   a:mapModes		Optional string containing 'n', 'o' and/or 'v',
 "			representing the modes for which mappings should be
 "			created. Defaults to all modes.
+"   a:searchName    Object to be searched; used as the subject in the message
+"		    when the search wraps: "a:searchName hit BOTTOM, continuing
+"		    at TOP". Wrapping is determined by the 'wrapscan' setting.
+"		    Optional; when not given or empty, searches never wrap.
 "
 "* NOTES:
 "   - If your motion is linewise, the patterns should have the start of match
@@ -134,33 +144,36 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 "*******************************************************************************
     let l:endMatch = (a:isEndPatternToEnd ? 'e' : '')
     let l:mapModes = split((a:0 ? a:1 : 'nov'), '\zs')
+    let l:searchName = (a:0 >= 2 ? a:2 : '')
+    let l:wrapFlag = (empty(l:searchName) ? 'W' : '')
 
     if empty(a:keyAfterBracket) && empty(a:inverseKeyAfterBracket)
 	let l:dataset = [
-	\   [ 0, '[[', a:patternToBegin, 'bW' ],
-	\   [ 0, ']]', a:patternToBegin, 'W' ],
-	\   [ 1, '[]', a:patternToEnd, 'bW' . l:endMatch ],
-	\   [ 1, '][', a:patternToEnd, 'W' . l:endMatch ],
+	\   [ 0, '[[', a:patternToBegin, 'b' . l:wrapFlag ],
+	\   [ 0, ']]', a:patternToBegin, ''  . l:wrapFlag ],
+	\   [ 1, '[]', a:patternToEnd,   'b' . l:wrapFlag . l:endMatch ],
+	\   [ 1, '][', a:patternToEnd,   ''  . l:wrapFlag . l:endMatch ],
 	\]
     else
 	let l:dataset = []
 	if ! empty(a:keyAfterBracket)
-	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(0, a:keyAfterBracket), a:patternToBegin, 'bW' ])
-	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(1, a:keyAfterBracket), a:patternToBegin, 'W' ])
+	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(0, a:keyAfterBracket), a:patternToBegin, 'b' . l:wrapFlag ])
+	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(1, a:keyAfterBracket), a:patternToBegin, ''  . l:wrapFlag ])
 	endif
 	if ! empty(a:inverseKeyAfterBracket)
-	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(0, a:inverseKeyAfterBracket), a:patternToEnd, 'bW' . l:endMatch ])
-	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(1, a:inverseKeyAfterBracket), a:patternToEnd, 'W' . l:endMatch ])
+	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(0, a:inverseKeyAfterBracket), a:patternToEnd, 'b' . l:wrapFlag . l:endMatch ])
+	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(1, a:inverseKeyAfterBracket), a:patternToEnd, ''  . l:wrapFlag . l:endMatch ])
 	endif
     endif
     for l:mode in l:mapModes
 	for l:data in l:dataset
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#CountJump(%s, %s, %s)<CR>",
+	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#CountJumpWithWrapMessage(%s, %s, %s, %s)<CR>",
 	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
 	    \	    a:mapArgs,
 	    \	    l:data[1],
 	    \	    string(l:data[0] && a:isEndPatternToEnd ? toupper(l:mode) : l:mode),
+	    \       string(l:searchName),
 	    \	    string(l:data[2]),
 	    \	    string(l:data[3])
 	    \   ), '|'
