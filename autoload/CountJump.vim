@@ -2,7 +2,7 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2009-2013 Ingo Karkat
+" Copyright: (C) 2009-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -10,6 +10,8 @@
 " REVISION	DATE		REMARKS
 "   1.83.018	14-Jun-2013	Minor: Make substitute() robust against
 "				'ignorecase'.
+"				FIX: Need to save v:count1 before issuing the
+"				normal mode "gv" command.
 "   1.81.017	15-Oct-2012	BUG: Wrong variable scope for copied
 "				a:isBackward in
 "				CountJump#CountSearchWithWrapMessage().
@@ -208,12 +210,13 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 "   None.
 "*******************************************************************************
     let l:save_view = winsaveview()
+    let l:count = v:count1
 
     if a:mode ==? 'v'
 	normal! gv
     endif
 
-    let l:matchPosition = CountJump#CountSearchWithWrapMessage(v:count1, a:searchName, a:000)
+    let l:matchPosition = CountJump#CountSearchWithWrapMessage(l:count, a:searchName, a:000)
     if l:matchPosition != [0, 0]
 	" Add the original cursor position to the jump list.
 	call winrestview(l:save_view)
@@ -253,6 +256,7 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
     endif
 endfunction
 function! CountJump#CountJump( mode, ... )
+    " See CountJump#CountJumpWithWrapMessage().
     return call('CountJump#CountJumpWithWrapMessage', [a:mode, ''] + a:000)
 endfunction
 function! CountJump#JumpFunc( mode, JumpFunc, ... )
@@ -288,12 +292,13 @@ function! CountJump#JumpFunc( mode, JumpFunc, ... )
 "*******************************************************************************
     let l:save_view = winsaveview()
     let l:originalPosition = getpos('.')
+    let l:count = v:count1
 
     if a:mode ==? 'v'
 	normal! gv
     endif
 
-    call call(a:JumpFunc, [v:count1] + a:000)
+    call call(a:JumpFunc, [l:count] + a:000)
     let l:matchPosition = getpos('.')
     if l:matchPosition != l:originalPosition
 	" Add the original cursor position to the jump list.
@@ -413,6 +418,7 @@ function! CountJump#CountJumpFuncWithWrapMessage( count, searchName, isBackward,
     return l:matchPosition
 endfunction
 function! CountJump#CountJumpFunc( count, SingleJumpFunc, ... )
+    " See CountJump#CountJumpFuncWithWrapMessage().
     return call('CountJump#CountJumpFuncWithWrapMessage', [a:count, '', 0, a:SingleJumpFunc] + a:000)
 endfunction
 
