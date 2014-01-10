@@ -247,6 +247,10 @@ IDEAS							      *CountJump-ideas*
 HISTORY							    *CountJump-history*
 
 1.83	RELEASEME
+- Use more canonical way of invoking the Funcrefs in
+  CountJump#Motion#MakeBracketMotionWithJumpFunctions(); this will then also
+  work with passed String function names.
+- FIX: Need to save v:count1 before issuing the normal mode "gv" command.
 - Minor: Make substitute() robust against 'ignorecase'.
 
 1.82	30-Oct-2012
@@ -384,7 +388,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2009-2013 Ingo Karkat
+Copyright: (C) 2009-2014 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
