@@ -43,8 +43,10 @@ diff_movement	  (vimscript #3180): Movement over diff hunks with ]] etc.
 fortunes_movement (vimscript #3181): Movement over email fortunes with ]] etc.
 help_movement     (vimscript #3179): Movement over Vim help sections with ]] etc.
 mail_movement     (vimscript #3182): Movement over email quotes with ]] etc.
-JumpToTrailingWhitespace (vimscript #3968): Motions to locate unwanted
-					    whitespace at the end of lines.
+diffwindow_movement:		     Movement over changes in a diff window.
+                  (vimscript #3719)
+JumpToTrailingWhitespace:	     Motions to locate unwanted whitespace at the end of lines.
+		  (vimscript #3968)
 TaskMotion        (vimscript #3990): Motions to task and TODO markers.
 ConflictMotions   (vimscript #3991): Motions to and inside SCM conflict markers.
 vim_movement	  (vimscript #4002): Movement over Vim functions with ]m etc.
@@ -52,8 +54,10 @@ vbs_movement      (vimscript #4003): Movement over VBScript classes /
 				     functions / properties / subs with ]m etc.
 dosbatch_movement (vimscript #4004): Movement over MSDOS batch file functions
 				     / labels with ]m etc.
+SameSyntaxMotion  (vimscript #4338): Motions to the borders of the same syntax highlighting.
 JumpToVerticalOccurrence:	     Like f{char}, but searching the same
 		  (vimscript #4841)  screen column, not line.
+ErrorMotion	  (vimscript #0000): Motions to text highlighted as error.
 
 RELATED WORKS								     *
 
@@ -250,7 +254,7 @@ IDEAS							      *CountJump-ideas*
 ==============================================================================
 HISTORY							    *CountJump-history*
 
-1.83	RELEASEME
+1.83	23-Jan-2014
 - Use more canonical way of invoking the Funcrefs in
   CountJump#Motion#MakeBracketMotionWithJumpFunctions(); this will then also
   work with passed String function names.
@@ -258,7 +262,7 @@ HISTORY							    *CountJump-history*
 - Minor: Make substitute() robust against 'ignorecase'.
 - Add optional dependency to ingo-library (vimscript #4433).
 
-1.82	30-Oct-2012
+1.82	30-Oct-2012 (unreleased)
 - FIX: In text objects, when the end position is before the begin position,
   that's not a valid selection. Test for this and abort in that case.
 - For linewise selections, always position the cursor at the start of the end
