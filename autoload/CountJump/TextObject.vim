@@ -3,12 +3,14 @@
 " DEPENDENCIES:
 "   - CountJump.vim, CountJump/Mappings.vim autoload scripts
 "
-" Copyright: (C) 2009-2012 Ingo Karkat
+" Copyright: (C) 2009-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.83.015	14-Jun-2013	Minor: Make substitute() robust against
+"				'ignorecase'.
 "   1.82.014	30-Oct-2012	FIX: In text objects, when the end position is
 "				before the begin position, that's not a valid
 "				selection. Test for this and abort in that case.
@@ -338,7 +340,7 @@ function! CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, ty
 endfunction
 
 function! s:function(name)
-    return function(substitute(a:name, '^s:', matchstr(expand('<sfile>'), '<SNR>\d\+_\zefunction$'),''))
+    return function(substitute(a:name, '^\Cs:', matchstr(expand('<sfile>'), '<SNR>\d\+_\zefunction$'),''))
 endfunction
 function! CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, types, selectionMode, patternToBegin, patternToEnd )
 "*******************************************************************************
