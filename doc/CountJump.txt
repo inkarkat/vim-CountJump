@@ -254,6 +254,12 @@ IDEAS							      *CountJump-ideas*
 ==============================================================================
 HISTORY							    *CountJump-history*
 
+1.84	RELEASEME
+- Pin down the 'virtualedit' setting (to "onemore") during
+  CountJump#TextObject#TextObjectWithJumpFunctions() to avoid that a
+  characterwise outer text object that ends at the end of a line includes the
+  line's newline character when 'selection' is "exclusive".
+
 1.83	23-Jan-2014
 - Use more canonical way of invoking the Funcrefs in
   CountJump#Motion#MakeBracketMotionWithJumpFunctions(); this will then also
