@@ -3,12 +3,19 @@
 " DEPENDENCIES:
 "   - CountJump.vim, CountJump/Mappings.vim autoload scripts
 "
-" Copyright: (C) 2009-2013 Ingo Karkat
+" Copyright: (C) 2009-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.84.016	22-Apr-2014	Pin down the 'virtualedit' setting (to
+"				"onemore") during
+"				CountJump#TextObject#TextObjectWithJumpFunctions()
+"				to avoid that a characterwise outer text object
+"				that ends at the end of a line includes the
+"				line's newline character when 'selection' is
+"				"exclusive".
 "   1.83.015	14-Jun-2013	Minor: Make substitute() robust against
 "				'ignorecase'.
 "   1.82.014	30-Oct-2012	FIX: In text objects, when the end position is
@@ -155,6 +162,8 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
     let g:CountJump_Context = {}
 
     let l:save_whichwrap = &whichwrap
+    let l:save_virtualedit = &virtualedit
+    set virtualedit=onemore " Need to move beyond the current line for proper selection of an end position at the end of the line when 'selection' is "exclusive"; otherwise, the "l" motion would select the newline, too.
     set whichwrap+=h,l
     try
 	let l:beginPosition = call(a:JumpToBegin, [1, a:isInner])
@@ -249,6 +258,7 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
 	    normal! gv
 	endif
     finally
+	let &virtualedit = l:save_virtualedit
 	let &whichwrap = l:save_whichwrap
     endtry
 endfunction
