@@ -1,6 +1,7 @@
 " CountJump.vim: Move to a buffer position via repeated jumps (or searches).
 "
 " DEPENDENCIES:
+"   - ingo/motion/helper.vim autoload script (optional)
 "
 " Copyright: (C) 2009-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -8,6 +9,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.83.019	11-Jan-2014	Factor out special treatment for visual and
+"				operator-pending motions to
+"				ingo#motion#helper#AdditionalMovement(), but
+"				keep internal fallback to keep the dependency to
+"				ingo-library optional.
 "   1.83.018	14-Jun-2013	Minor: Make substitute() robust against
 "				'ignorecase'.
 "				FIX: Need to save v:count1 before issuing the
@@ -183,6 +189,30 @@ endfunction
 function! CountJump#CountSearch( count, searchArguments )
     return CountJump#CountSearchWithWrapMessage(a:count, '', a:searchArguments)
 endfunction
+silent! call ingo#motion#helper#DoesNotExist()	" Execute a function to force autoload.
+if exists('*ingo#motion#helper#AdditionalMovement')
+function! s:AdditionalMovement( isSpecialLastLineTreatment )
+    return ingo#motion#helper#AdditionalMovement(a:isSpecialLastLineTreatment)
+endfunction
+else
+function! s:AdditionalMovement( isSpecialLastLineTreatment )
+    let l:save_ww = &whichwrap
+    set whichwrap+=l
+    if a:isSpecialLastLineTreatment && line('.') == line('$') && &virtualedit !=# 'onemore' && &virtualedit !=# 'all'
+	" For the last line in the buffer, that still doesn't work in
+	" operator-pending mode, unless we can do virtual editing.
+	let l:save_ve = &virtualedit
+	set virtualedit=onemore
+	normal! l
+	augroup IngoLibraryTempVirtualEdit
+	    execute 'autocmd! CursorMoved * set virtualedit=' . l:save_ve . ' | autocmd! IngoLibraryTempVirtualEdit'
+	augroup END
+    else
+	normal! l
+    endif
+    let &whichwrap = l:save_ww
+endfunction
+endif
 function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 "*******************************************************************************
 "* PURPOSE:
@@ -225,33 +255,7 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 
 	if a:mode ==# 'V' && &selection ==# 'exclusive' || a:mode ==# 'O'
 	    " Special additional treatment for end patterns to end.
-	    " The difference between normal mode, operator-pending and visual
-	    " mode with 'selection' set to "exclusive" is that in the latter
-	    " two, the motion must go _past_ the final "word" character, so that
-	    " all characters of the "word" are selected. This is done by
-	    " appending a 'l' motion after the search for the next "word".
-	    "
-	    " The 'l' motion only works properly at the end of the line (i.e.
-	    " when the moved-over "word" is at the end of the line) when the 'l'
-	    " motion is allowed to move over to the next line. Thus, the 'l'
-	    " motion is added temporarily to the global 'whichwrap' setting.
-	    " Without this, the motion would leave out the last character in the
-	    " line.
-	    let l:save_ww = &whichwrap
-	    set whichwrap+=l
-	    if a:mode ==# 'O' && line('.') == line('$') && &virtualedit !=# 'onemore' && &virtualedit !=# 'all'
-		" For the last line in the buffer, that still doesn't work in
-		" operator-pending mode, unless we can do virtual editing.
-		let l:save_ve = &virtualedit
-		set virtualedit=onemore
-		normal! l
-		augroup TempVirtualEdit
-		    execute 'autocmd! CursorMoved * set virtualedit=' . l:save_ve . ' | autocmd! TempVirtualEdit'
-		augroup END
-	    else
-		normal! l
-	    endif
-	    let &whichwrap = l:save_ww
+	    call s:AdditionalMovement(a:mode ==# 'O')
 	endif
     endif
 endfunction
