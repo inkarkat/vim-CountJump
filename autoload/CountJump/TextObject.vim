@@ -9,6 +9,15 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.84.017	24-Apr-2014	FIX: There are no buffer-local functions with a
+"				b: scope prefix, and Vim 7.4.264 disallows those
+"				invalid function names now. Previously, multiple
+"				buffer-local text objects with the same key
+"				would override each other. Instead, make the
+"				functions created by
+"				CountJump#TextObject#MakeWithCountSearch()
+"				buffer-scoped by prefixing "s:B" and the buffer
+"				number.
 "   1.84.016	22-Apr-2014	Pin down the 'virtualedit' setting (to
 "				"onemore") during
 "				CountJump#TextObject#TextObjectWithJumpFunctions()
@@ -401,11 +410,11 @@ function! CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, type
 "* RETURN VALUES:
 "   None.
 "*******************************************************************************
-    let l:scope = (a:mapArgs =~# '<buffer>' ? 'b:' : 's:')
-
     if a:types !~# '^[ai]\+$'
 	throw "ASSERT: Type must consist of 'a' and/or 'i', but is: '" . a:types . "'"
     endif
+
+    let l:scope = (a:mapArgs =~# '<buffer>' ? 's:B' . bufnr('') : 's:')
 
     " If only either an inner or outer text object is defined, the generated
     " function must include the type, so that it is possible to separately
