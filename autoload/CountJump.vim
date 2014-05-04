@@ -1,6 +1,7 @@
 " CountJump.vim: Move to a buffer position via repeated jumps (or searches).
 "
 " DEPENDENCIES:
+"   - ingo/pos.vim autoload script
 "   - ingo/motion/helper.vim autoload script (optional)
 "
 " Copyright: (C) 2009-2014 Ingo Karkat
@@ -9,6 +10,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.85.020	30-Apr-2014	Use ingo/pos.vim.
 "   1.83.019	11-Jan-2014	Factor out special treatment for visual and
 "				operator-pending motions to
 "				ingo#motion#helper#AdditionalMovement(), but
@@ -159,9 +161,9 @@ function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArgumen
 
 	" Note: No need to check s:searchArguments and 'wrapscan'; the wrapping
 	" can only occur if 'wrapscan' is actually on.
-	if ! l:isBackward && (l:prevLine > l:matchPosition[0] || l:prevLine == l:matchPosition[0] && l:prevCol >= l:matchPosition[1])
+	if ! l:isBackward && ingo#pos#IsOnOrAfter([l:prevLine, l:prevCol], l:matchPosition)
 	    let l:isWrapped = 1
-	elseif l:isBackward && (l:prevLine < l:matchPosition[0] || l:prevLine == l:matchPosition[0] && l:prevCol <= l:matchPosition[1])
+	elseif l:isBackward && ingo#pos#IsOnOrBefore([l:prevLine, l:prevCol], l:matchPosition)
 	    let l:isWrapped = 1
 	endif
 	let [l:prevLine, l:prevCol] = l:matchPosition
@@ -394,9 +396,9 @@ function! CountJump#CountJumpFuncWithWrapMessage( count, searchName, isBackward,
 	    return l:matchPosition
 	endif
 
-	if ! a:isBackward && (l:prevLine > l:matchPosition[0] || l:prevLine == l:matchPosition[0] && l:prevCol >= l:matchPosition[1])
+	if ! a:isBackward && ingo#pos#IsOnOrAfter([l:prevLine, l:prevCol], l:matchPosition)
 	    let l:isWrapped = 1
-	elseif a:isBackward && (l:prevLine < l:matchPosition[0] || l:prevLine == l:matchPosition[0] && l:prevCol <= l:matchPosition[1])
+	elseif a:isBackward && ingo#pos#IsOnOrBefore([l:prevLine, l:prevCol], l:matchPosition)
 	    let l:isWrapped = 1
 	endif
 	let [l:prevLine, l:prevCol] = l:matchPosition
