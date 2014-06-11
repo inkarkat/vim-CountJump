@@ -1,6 +1,7 @@
 " CountJump.vim: Move to a buffer position via repeated jumps (or searches).
 "
 " DEPENDENCIES:
+"   - ingo/msg.vim autoload script
 "   - ingo/pos.vim autoload script
 "   - ingo/motion/helper.vim autoload script (optional)
 "
@@ -10,6 +11,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.85.021	05-May-2014	Use ingo#msg#WarningMsg().
 "   1.85.020	30-Apr-2014	Use ingo/pos.vim.
 "   1.83.019	11-Jan-2014	Factor out special treatment for visual and
 "				operator-pending motions to
@@ -98,10 +100,7 @@
 
 function! s:WrapMessage( searchName, isBackward )
     if &shortmess !~# 's'
-	let v:warningmsg = a:searchName . ' ' . (a:isBackward ? 'hit TOP, continuing at BOTTOM' : 'hit BOTTOM, continuing at TOP')
-	echohl WarningMsg
-	echomsg v:warningmsg
-	echohl None
+	call ingo#msg#WarningMsg(a:searchName . ' ' . (a:isBackward ? 'hit TOP, continuing at BOTTOM' : 'hit BOTTOM, continuing at TOP'))
     endif
 endfunction
 function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArguments )
