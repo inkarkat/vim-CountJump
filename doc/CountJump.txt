@@ -257,6 +257,7 @@ HISTORY							    *CountJump-history*
 1.85	RELEASEME
 - Use ingo/pos.vim.
 - Use ingo#msg#WarningMsg().
+- Make test for 'virtualedit' option values also account for multiple values.
 *** You need to update to ingo-library (vimscript #4433) version 1.019! ***
 
 1.84	25-Apr-2014
