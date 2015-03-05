@@ -11,6 +11,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.85.022	12-Jun-2014	Make test for 'virtualedit' option values also
+"				account for multiple values.
 "   1.85.021	05-May-2014	Use ingo#msg#WarningMsg().
 "   1.85.020	30-Apr-2014	Use ingo/pos.vim.
 "   1.83.019	11-Jan-2014	Factor out special treatment for visual and
@@ -199,14 +201,14 @@ else
 function! s:AdditionalMovement( isSpecialLastLineTreatment )
     let l:save_ww = &whichwrap
     set whichwrap+=l
-    if a:isSpecialLastLineTreatment && line('.') == line('$') && &virtualedit !=# 'onemore' && &virtualedit !=# 'all'
+    if l:isSpecialLastLineTreatment && line('.') == line('$') && &virtualedit !~# 'all\|onemore'
 	" For the last line in the buffer, that still doesn't work in
 	" operator-pending mode, unless we can do virtual editing.
-	let l:save_ve = &virtualedit
+	let l:save_virtualedit = &virtualedit
 	set virtualedit=onemore
 	normal! l
 	augroup IngoLibraryTempVirtualEdit
-	    execute 'autocmd! CursorMoved * set virtualedit=' . l:save_ve . ' | autocmd! IngoLibraryTempVirtualEdit'
+	    execute 'autocmd! CursorMoved * set virtualedit=' . l:save_virtualedit . ' | autocmd! IngoLibraryTempVirtualEdit'
 	augroup END
     else
 	normal! l
@@ -327,14 +329,14 @@ function! CountJump#JumpFunc( mode, JumpFunc, ... )
 	    " line.
 	    let l:save_ww = &whichwrap
 	    set whichwrap+=l
-	    if a:mode ==# 'O' && line('.') == line('$') && &virtualedit !=# 'onemore' && &virtualedit !=# 'all'
+	    if a:mode ==# 'O' && line('.') == line('$') && ! ingo#option#ContainsOneOf(&virtualedit, ['all', 'onemore'])
 		" For the last line in the buffer, that still doesn't work,
 		" unless we can do virtual editing.
-		let l:save_ve = &virtualedit
+		let l:save_virtualedit = &virtualedit
 		set virtualedit=onemore
 		normal! l
 		augroup TempVirtualEdit
-		    execute 'autocmd! CursorMoved * set virtualedit=' . l:save_ve . ' | autocmd! TempVirtualEdit'
+		    execute 'autocmd! CursorMoved * set virtualedit=' . l:save_virtualedit . ' | autocmd! TempVirtualEdit'
 		augroup END
 	    else
 		normal! l
