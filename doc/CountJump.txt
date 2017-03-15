@@ -55,6 +55,8 @@ vbs_movement      (vimscript #4003): Movement over VBScript classes /
 dosbatch_movement (vimscript #4004): Movement over MSDOS batch file functions
 				     / labels with ]m etc.
 SameSyntaxMotion  (vimscript #4338): Motions to the borders of the same syntax highlighting.
+JumpToVerticalBlock:		     Like W / E, but vertically in the same column.
+		  (vimscript #0000)
 JumpToVerticalOccurrence:	     Like f{char}, but searching the same
 		  (vimscript #4841)  screen column, not line.
 ErrorMotion	  (vimscript #0000): Motions to text highlighted as error.
@@ -427,7 +429,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2009-2015 Ingo Karkat
+Copyright: (C) 2009-2016 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
