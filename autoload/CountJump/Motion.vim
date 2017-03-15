@@ -2,13 +2,19 @@
 "
 " DEPENDENCIES:
 "   - CountJump.vim, CountJump/Mappings.vim autoload scripts.
+"   - ingo/escape/command.vim autoload script
 "
-" Copyright: (C) 2009-2014 Ingo Karkat
+" Copyright: (C) 2009-2015 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.86.011	06-Mar-2015	CountJump#Motion#MakeBracketMotion(): The
+"				a:patternToBegin, a:patternToEnd, a:searchName
+"				arguments may contain special characters that
+"				need escaping in a map. Use
+"				ingo#escape#command#mapescape().
 "   1.83.010	02-Jan-2014	Use more canonical way of invoking the Funcrefs
 "				in
 "				CountJump#Motion#MakeBracketMotionWithJumpFunctions();
@@ -178,9 +184,9 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 	    \	    a:mapArgs,
 	    \	    l:data[1],
 	    \	    string(l:data[0] && a:isEndPatternToEnd ? toupper(l:mode) : l:mode),
-	    \       string(l:searchName),
-	    \	    string(l:data[2]),
-	    \	    string(l:data[3])
+	    \       string(ingo#escape#command#mapescape(l:searchName)),
+	    \	    string(ingo#escape#command#mapescape(l:data[2])),
+	    \	    string(ingo#escape#command#mapescape(l:data[3]))
 	    \   ), '|'
 	    \)
 	endfor
