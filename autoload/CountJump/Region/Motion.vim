@@ -5,12 +5,14 @@
 "   - CountJump.vim, CountJump/Mappings.vim, CountJump/Region.vim autoload scripts.
 "   - ingo/escape/command.vim autoload script
 "
-" Copyright: (C) 2010-2015 Ingo Karkat
+" Copyright: (C) 2010-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.86.006	16-Mar-2017	CountJump#Region#Motion#MakeBracketMotion():
+"				Catch all exceptions and report only the text.
 "   1.86.005	06-Mar-2015	CountJump#Region#Motion#MakeBracketMotion(): The
 "				a:Expr argument may contain special characters
 "				that need escaping in a map. Use
@@ -123,7 +125,7 @@ function! CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, i
 	for l:data in l:dataset
 	    let l:useToEndOfLine = (l:mode ==# 'n' ? 0 : l:data[3])
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#JumpFunc(%s, 'CountJump#Region#JumpToNextRegion', %s, %d, %d, %d, %d)<CR>",
+	    \   printf("%snoremap <silent> %s %s :<C-u>try<Bar>call CountJump#JumpFunc(%s, 'CountJump#Region#JumpToNextRegion', %s, %d, %d, %d, %d)<Bar>catch<Bar>if v:exception !~# '^\\%(Vim:\\)\\?Interrupt$'<Bar>echoerr ingo#msg#MsgFromVimException()<Bar>endif<Bar>endtry<CR>",
 	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
 	    \	    a:mapArgs,
 	    \	    l:data[0],
