@@ -92,6 +92,8 @@ function! CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, i
 "   swapped.)
 "   a:Expr	Regular expression that defines the region, i.e. must (not)
 "		match in all lines belonging to it.
+"		Or Funcref to a function that takes no arguments and returns the
+"		regular expression.
 "		Or Funcref to a function that takes a line number and returns
 "		the matching byte offset (or -1), just like |match()|.
 "   a:isMatch	Flag whether to search matching (vs. non-matching) lines.
