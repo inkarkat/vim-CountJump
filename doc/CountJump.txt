@@ -265,6 +265,16 @@ HISTORY							    *CountJump-history*
   ingo#escape#command#mapescape().
 - Retire duplicated fallback for ingo#motion#helper#AdditionalMovement();
   since version 1.85, the ingo-library is now a mandatory dependency.
+- CountJump#Motion#MakeBracketMotionWithJumpFunctions(),
+  CountJump#TextObject#MakeWithJumpFunctions(),
+  CountJump#Region#Motion#MakeBracketMotion(): Catch all exceptions and
+  report only the text. My ErrorMotion.vim plugin could be slow to find the
+  next error if there is none. Aborting with <C-c> would print a long
+  multi-line exception: "Error detected while processing function
+  ErrorMotion#Forward[1]..CountJump#JumpFunc[39]..HlgroupMotion#JumpWithWrapMessage[26]..CountJump#CountJumpFuncWithWrapMessage[35]..HlgroupMotion#SearchFirstHlgroup:
+  line   67: Interrupted". As we apparently cannot avoid the printing of "Type
+  :quit<Enter>  to exit Vim", suppress the Vim:Interrupt exception, and
+  :echoerr all others.
 
 1.85	23-Dec-2014
 - Use ingo/pos.vim.
@@ -429,7 +439,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2009-2016 Ingo Karkat
+Copyright: (C) 2009-2017 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
