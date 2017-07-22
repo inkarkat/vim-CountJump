@@ -10,6 +10,18 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.90.022	22-Jul-2017	Rename g:CountJump_Context to
+"				g:CountJump_TextObjectContext. When using
+"				CountJump#Region#TextObject#Make(), the
+"				generated jump functions also set that context,
+"				and there's a clash with
+"				CountJump#TextObject#TextObjectWithJumpFunctions().
+"				In particular, one cannot store a context for
+"				the entire text object (both jumps to begin and
+"				end), as the individual jump functions clear the
+"				identical context.
+"				Clear g:CountJump_TextObjectContext at the end
+"				of the function.
 "   1.86.021	16-Mar-2017	CountJump#TextObject#MakeWithJumpFunctions():
 "				Catch all exceptions and report only the text.
 "   1.85.020	30-Apr-2014	Use ingo/pos.vim.
@@ -172,7 +184,7 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
     let l:save_view = winsaveview()
     let [l:cursorLine, l:cursorCol] = [line('.'), col('.')]
     let l:isSelected = 0
-    let g:CountJump_Context = {}
+    let g:CountJump_TextObjectContext = {}
 
     let l:save_whichwrap = &whichwrap
     let l:save_virtualedit = &virtualedit
@@ -270,6 +282,7 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
 	    normal! gv
 	endif
     finally
+	unlet! g:CountJump_TextObjectContext
 	let &virtualedit = l:save_virtualedit
 	let &whichwrap = l:save_whichwrap
     endtry
