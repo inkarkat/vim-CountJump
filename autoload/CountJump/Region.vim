@@ -12,7 +12,18 @@
 "				g:CountJump_MotionContext, to avoid a clash with
 "				the text object in
 "				CountJump#TextObject#TextObjectWithJumpFunctions().
-"				Support non-argument Funcref for a:Expr.
+"				Clear g:CountJump_MotionContext at the end of
+"				the function.
+"				Support non-argument Funcref for a:Expr that
+"				gets evaluated once at the beginning, and should
+"				yield a regular expression that is then used in
+"				its stead. We cannot handle this in
+"				s:SearchInLineMatching(); it gets invoked many
+"				times. Add s:TryEvaluateExpr() that also handles
+"				the double invocation by an outer text object.
+"				Invoke it at the start of both region search
+"				functions: CountJump#Region#SearchForRegionEnd()
+"				and CountJump#Region#SearchForNextRegion().
 "   1.50.010	30-Aug-2011	Also support a match()-like Funcref instead of a
 "				pattern to define the range.
 "				Initialize global g:CountJump_Context object for
@@ -160,11 +171,21 @@ endfunction
 function! s:TryEvaluateExpr( Expr )
     if type(a:Expr) == 2 " Funcref
 	try
-	    let l:regexp = call(a:Expr, [])
-	    if ! has_key(g:CountJump_TextObjectContext, 'ExprFuncrefRegexp')
-		let g:CountJump_TextObjectContext.ExprFuncrefRegexp = l:regexp
+	    let l:pattern = call(a:Expr, [])
+
+	    if exists('g:CountJump_TextObjectContext')
+		" In an (outer) text object, the current line after the first
+		" jump is outside of the matching region. If we picked up the
+		" pattern again, it would be wrong. In any case, we should avoid
+		" re-querying the pattern. Therefore, save the pattern in the
+		" text object context, and recall it from there.
+		if ! has_key(g:CountJump_TextObjectContext, 'ExprFuncrefPattern')
+		    let g:CountJump_TextObjectContext.ExprFuncrefPattern = l:pattern
+		endif
+		return g:CountJump_TextObjectContext.ExprFuncrefPattern
 	    endif
-	    return g:CountJump_TextObjectContext.ExprFuncrefRegexp
+
+	    return l:pattern
 	catch /^Vim\%((\a\+)\)\=:E119:/ " E119: Not enough arguments for function
 	    " This is a type 2 Funcref, to be called with a line number. Keep
 	    " it.
@@ -200,32 +221,36 @@ function! CountJump#Region#SearchForRegionEnd( count, Expr, isMatch, step )
     let l:c = a:count
     let l:line = line('.')
     let g:CountJump_MotionContext = {}
-    let l:Expr = s:TryEvaluateExpr(a:Expr)
+    try
+	let l:Expr = s:TryEvaluateExpr(a:Expr)
 
-    while 1
-	" Search for the current region's end.
-	let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, a:isMatch, a:step)
-	if l:line == 0
-	    return [0, 0]
-	endif
+	while 1
+	    " Search for the current region's end.
+	    let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, a:isMatch, a:step)
+	    if l:line == 0
+		return [0, 0]
+	    endif
 
-	" If this is the last region to be found, we're done.
-	let l:c -= 1
-	if l:c == 0
-	    break
-	endif
+	    " If this is the last region to be found, we're done.
+	    let l:c -= 1
+	    if l:c == 0
+		break
+	    endif
 
-	" Otherwise, search for the next region's start.
-	let l:line += a:step
-	let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, ! a:isMatch, a:step)
-	if l:line == 0
-	    return [0, 0]
-	endif
+	    " Otherwise, search for the next region's start.
+	    let l:line += a:step
+	    let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, ! a:isMatch, a:step)
+	    if l:line == 0
+		return [0, 0]
+	    endif
 
-	let l:line += a:step
-    endwhile
+	    let l:line += a:step
+	endwhile
 
-    return [l:line, l:col]
+	return [l:line, l:col]
+    finally
+	unlet! g:CountJump_MotionContext
+    endtry
 endfunction
 function! CountJump#Region#JumpToRegionEnd( count, Expr, isMatch, step, isToEndOfLine )
     let l:position = CountJump#Region#SearchForRegionEnd(a:count, a:Expr, a:isMatch, a:step)
@@ -267,79 +292,83 @@ function! CountJump#Region#SearchForNextRegion( count, Expr, isMatch, step, isAc
     let l:isDone = 0
     let l:line = line('.')
     let g:CountJump_MotionContext = {}
-    let l:Expr = s:TryEvaluateExpr(a:Expr)
+    try
+	let l:Expr = s:TryEvaluateExpr(a:Expr)
 
-    " Check whether we're currently on the border of a region.
-    let l:isInRegion = (s:SearchInLineMatching(l:line, l:Expr, a:isMatch) != 0)
-    let l:isNextInRegion = (s:SearchInLineMatching((l:line + a:step), l:Expr, a:isMatch) != 0)
+	" Check whether we're currently on the border of a region.
+	let l:isInRegion = (s:SearchInLineMatching(l:line, l:Expr, a:isMatch) != 0)
+	let l:isNextInRegion = (s:SearchInLineMatching((l:line + a:step), l:Expr, a:isMatch) != 0)
 "****D echomsg '**** in region:' (l:isInRegion ? 'current' : '') (l:isNextInRegion ? 'next' : '')
-    if l:isInRegion
-	if l:isNextInRegion
-	    " We're inside a region; search for the current region's end.
-	    let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, a:isMatch, a:step)
-	    if a:isAcrossRegion
-		if l:c == 1
-		    " We're done already!
-		    let l:isDone = 1
+	if l:isInRegion
+	    if l:isNextInRegion
+		" We're inside a region; search for the current region's end.
+		let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, a:isMatch, a:step)
+		if a:isAcrossRegion
+		    if l:c == 1
+			" We're done already!
+			let l:isDone = 1
+		    else
+			" We've moved to the border, resume the search for following
+			" regions...
+			let l:c = max([l:c - 1, 1])
+			" ...from the next line so that we move out of the current
+			" region.
+			let l:line += a:step
+		    endif
 		else
-		    " We've moved to the border, resume the search for following
-		    " regions...
-		    let l:c = max([l:c - 1, 1])
-		    " ...from the next line so that we move out of the current
-		    " region.
+		    " We're on the border, start the search from the next line so
+		    " that we move out of the current region.
 		    let l:line += a:step
 		endif
 	    else
-		" We're on the border, start the search from the next line so
-		" that we move out of the current region.
+		" We're on the border, start the search from the next line so that we
+		" move out of the current region.
 		let l:line += a:step
 	    endif
-	else
-	    " We're on the border, start the search from the next line so that we
-	    " move out of the current region.
-	    let l:line += a:step
 	endif
-    endif
 
 "****D echomsg '**** starting iteration on line' l:line
-    while ! l:isDone
-	" Search for the next region's start.
-	let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, ! a:isMatch, a:step)
-	if l:line == 0
-	    return [0, 0]
-	endif
-	let l:line += a:step
+	while ! l:isDone
+	    " Search for the next region's start.
+	    let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, ! a:isMatch, a:step)
+	    if l:line == 0
+		return [0, 0]
+	    endif
+	    let l:line += a:step
 
-	" If this is the last region to be found, we're almost done.
+	    " If this is the last region to be found, we're almost done.
 "****D echomsg '**** iteration' l:c 'on line' l:line
-	let l:c -= 1
-	if l:c == 0
-	    if a:isAcrossRegion
-		" Search for the current region's end.
-		let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, a:isMatch, a:step)
-		if l:line == 0
-		    return [0, 0]
+	    let l:c -= 1
+	    if l:c == 0
+		if a:isAcrossRegion
+		    " Search for the current region's end.
+		    let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, a:isMatch, a:step)
+		    if l:line == 0
+			return [0, 0]
+		    endif
+		else
+		    " Check whether another region starts at the current line.
+		    let l:col = s:SearchInLineMatching(l:line, l:Expr, a:isMatch)
+		    if l:col == 0
+			return [0, 0]
+		    endif
 		endif
-	    else
-		" Check whether another region starts at the current line.
-		let l:col = s:SearchInLineMatching(l:line, l:Expr, a:isMatch)
-		if l:col == 0
-		    return [0, 0]
-		endif
+
+		break
 	    endif
 
-	    break
-	endif
+	    " Otherwise, we're not done; skip over the next region.
+	    let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, a:isMatch, a:step)
+	    if l:line == 0
+		return [0, 0]
+	    endif
+	    let l:line += a:step
+	endwhile
 
-	" Otherwise, we're not done; skip over the next region.
-	let [l:line, l:col] = s:SearchForLastLineContinuouslyMatching(l:line, l:Expr, a:isMatch, a:step)
-	if l:line == 0
-	    return [0, 0]
-	endif
-	let l:line += a:step
-    endwhile
-
-    return [l:line, l:col]
+	return [l:line, l:col]
+    finally
+	unlet! g:CountJump_MotionContext
+    endtry
 endfunction
 function! CountJump#Region#JumpToNextRegion( count, Expr, isMatch, step, isAcrossRegion, isToEndOfLine )
     let l:position = CountJump#Region#SearchForNextRegion(a:count, a:Expr, a:isMatch, a:step, a:isAcrossRegion)
