@@ -39,27 +39,36 @@ SEE ALSO								     *
 
 The following ftplugins use this plugin:
 
-diff_movement	  (vimscript #3180): Movement over diff hunks with ]] etc.
-fortunes_movement (vimscript #3181): Movement over email fortunes with ]] etc.
-help_movement     (vimscript #3179): Movement over Vim help sections with ]] etc.
-mail_movement     (vimscript #3182): Movement over email quotes with ]] etc.
-diffwindow_movement:		     Movement over changes in a diff window.
-                  (vimscript #3719)
-JumpToTrailingWhitespace:	     Motions to locate unwanted whitespace at the end of lines.
-		  (vimscript #3968)
-TaskMotion        (vimscript #3990): Motions to task and TODO markers.
-ConflictMotions   (vimscript #3991): Motions to and inside SCM conflict markers.
-vim_movement	  (vimscript #4002): Movement over Vim functions with ]m etc.
-vbs_movement      (vimscript #4003): Movement over VBScript classes /
-				     functions / properties / subs with ]m etc.
-dosbatch_movement (vimscript #4004): Movement over MSDOS batch file functions
-				     / labels with ]m etc.
-SameSyntaxMotion  (vimscript #4338): Motions to the borders of the same syntax highlighting.
-JumpToVerticalBlock:		     Like W / E, but vertically in the same column.
-		  (vimscript #0000)
-JumpToVerticalOccurrence:	     Like f{char}, but searching the same
-		  (vimscript #4841)  screen column, not line.
-ErrorMotion	  (vimscript #0000): Motions to text highlighted as error.
+- |diff_movement.vim| (vimscript #3180):
+  Movement over diff hunks with ]] etc.
+- |fortunes_movement.vim| (vimscript #3181):
+  Movement over email fortunes with ]] etc.
+- |help_movement.vim| (vimscript #3179):
+  Movement over Vim help sections with ]] etc.
+- |mail_movement.vim| (vimscript #3182):
+  Movement over email quotes with ]] etc.
+- |diffwindow_movement.vim| (vimscript #3719):
+  Movement over changes in a diff window.
+- |JumpToTrailingWhitespace.vim| (vimscript #3968):
+  Motions to locate unwanted whitespace at the end of lines.
+- |TaskMotion.vim| (vimscript #3990):
+  Motions to task and TODO markers.
+- |ConflictMotions.vim| (vimscript #3991):
+  Motions to and inside SCM conflict markers.
+- |vim_movement.vim| (vimscript #4002):
+  Movement over Vim functions with ]m etc.
+- |vbs_movement.vim| (vimscript #4003):
+  Movement over VBScript classes / functions / properties / subs with ]m etc.
+- |dosbatch_movement.vim| (vimscript #4004):
+  Movement over MSDOS batch file functions / labels with ]m etc.
+- |SameSyntaxMotion.vim| (vimscript #4338):
+  Motions to the borders of the same syntax highlighting.
+- |JumpToVerticalBlock.vim| (vimscript #0000):
+  Like W / E, but vertically in the same column.
+- |JumpToVerticalOccurrence.vim| (vimscript #4841):
+  Like f{char}, but searching the same screen column, not line.
+- |ErrorMotion.vim| (vimscript #0000):
+  Motions to text highlighted as error.
 
 RELATED WORKS								     *
 
