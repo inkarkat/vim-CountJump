@@ -53,6 +53,8 @@ The following ftplugins use this plugin:
   Movement over MSDOS batch file functions / labels with ]m etc.
 - SameSyntaxMotion.vim ([vimscript #4338](http://www.vim.org/scripts/script.php?script_id=4338)):
   Motions to the borders of the same syntax highlighting.
+- JumpToVerticalBlock.vim ([vimscript #5657](http://www.vim.org/scripts/script.php?script_id=5657)):
+  Like W / E, but vertically in the same column.
 - JumpToVerticalOccurrence.vim ([vimscript #4841](http://www.vim.org/scripts/script.php?script_id=4841)):
   Like f{char}, but searching the same screen column, not line.
 
