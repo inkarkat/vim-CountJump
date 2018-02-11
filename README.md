@@ -1,23 +1,13 @@
-*CountJump.txt*         Create custom motions and text objects via repeated jumps.
+COUNT JUMP   
+===============================================================================
+_by Ingo Karkat_
 
-			 COUNT JUMP    by Ingo Karkat
-								*CountJump.vim*
-description			|CountJump-description|
-usage				|CountJump-usage|
-example				|CountJump-example|
-integration			|CountJump-integration|
-installation			|CountJump-installation|
-limitations			|CountJump-limitations|
-known problems			|CountJump-known-problems|
-todo				|CountJump-todo|
-history				|CountJump-history|
+DESCRIPTION
+------------------------------------------------------------------------------
 
-==============================================================================
-DESCRIPTION						*CountJump-description*
-
-Though it is not difficult to write a custom |movement| (basically a |:map|
-that executes some kind of search or jump) and a custom |text-object| (an
-|:omap| that selects a range of text), this is too complex for a novice user
+Though it is not difficult to write a custom movement (basically a :map
+that executes some kind of search or jump) and a custom text-object (an
+:omap that selects a range of text), this is too complex for a novice user
 and often repetitive.
 This plugin covers the common use case where the movement and boundaries of a
 text object can be specified via start and end patterns, and offers a single
@@ -33,198 +23,194 @@ single regular expression, the jump may need adapting depending on the
 context, or other uses.
 This plugin contains some support for movement and text objects consisting of
 text regions that can be defined by continuous lines that match a particular
-pattern, e.g. comment blocks that all start with /^\s*#/.
+pattern, e.g. comment blocks that all start with /^\s\*#/.
 
-SEE ALSO								     *
+### SEE ALSO
 
 The following ftplugins use this plugin:
 
-- |diff_movement.vim| (vimscript #3180):
+- diff\_movement.vim ([vimscript #3180](http://www.vim.org/scripts/script.php?script_id=3180)):
   Movement over diff hunks with ]] etc.
-- |fortunes_movement.vim| (vimscript #3181):
+- fortunes\_movement.vim ([vimscript #3181](http://www.vim.org/scripts/script.php?script_id=3181)):
   Movement over email fortunes with ]] etc.
-- |help_movement.vim| (vimscript #3179):
+- help\_movement.vim ([vimscript #3179](http://www.vim.org/scripts/script.php?script_id=3179)):
   Movement over Vim help sections with ]] etc.
-- |mail_movement.vim| (vimscript #3182):
+- mail\_movement.vim ([vimscript #3182](http://www.vim.org/scripts/script.php?script_id=3182)):
   Movement over email quotes with ]] etc.
-- |diffwindow_movement.vim| (vimscript #3719):
+- diffwindow\_movement.vim ([vimscript #3719](http://www.vim.org/scripts/script.php?script_id=3719)):
   Movement over changes in a diff window.
-- |JumpToTrailingWhitespace.vim| (vimscript #3968):
+- JumpToTrailingWhitespace.vim ([vimscript #3968](http://www.vim.org/scripts/script.php?script_id=3968)):
   Motions to locate unwanted whitespace at the end of lines.
-- |TaskMotion.vim| (vimscript #3990):
+- TaskMotion.vim ([vimscript #3990](http://www.vim.org/scripts/script.php?script_id=3990)):
   Motions to task and TODO markers.
-- |ConflictMotions.vim| (vimscript #3991):
+- ConflictMotions.vim ([vimscript #3991](http://www.vim.org/scripts/script.php?script_id=3991)):
   Motions to and inside SCM conflict markers.
-- |vim_movement.vim| (vimscript #4002):
+- vim\_movement.vim ([vimscript #4002](http://www.vim.org/scripts/script.php?script_id=4002)):
   Movement over Vim functions with ]m etc.
-- |vbs_movement.vim| (vimscript #4003):
+- vbs\_movement.vim ([vimscript #4003](http://www.vim.org/scripts/script.php?script_id=4003)):
   Movement over VBScript classes / functions / properties / subs with ]m etc.
-- |dosbatch_movement.vim| (vimscript #4004):
+- dosbatch\_movement.vim ([vimscript #4004](http://www.vim.org/scripts/script.php?script_id=4004)):
   Movement over MSDOS batch file functions / labels with ]m etc.
-- |SameSyntaxMotion.vim| (vimscript #4338):
+- SameSyntaxMotion.vim ([vimscript #4338](http://www.vim.org/scripts/script.php?script_id=4338)):
   Motions to the borders of the same syntax highlighting.
-- |JumpToVerticalBlock.vim| (vimscript #0000):
-  Like W / E, but vertically in the same column.
-- |JumpToVerticalOccurrence.vim| (vimscript #4841):
+- JumpToVerticalOccurrence.vim ([vimscript #4841](http://www.vim.org/scripts/script.php?script_id=4841)):
   Like f{char}, but searching the same screen column, not line.
-- |ErrorMotion.vim| (vimscript #0000):
-  Motions to text highlighted as error.
 
-RELATED WORKS								     *
+### RELATED WORKS
 
-- motpat.vim (vimscript #3030) offers similar functions to setup motion
+- motpat.vim ([vimscript #3030](http://www.vim.org/scripts/script.php?script_id=3030)) offers similar functions to setup motion
   mappings, but no text objects (yet).
-- textobj-user (vimscript #2100) has support for user-defined text objects via
+- textobj-user ([vimscript #2100](http://www.vim.org/scripts/script.php?script_id=2100)) has support for user-defined text objects via
   regular expressions, but they don't support selecting multiple via [count].
-- movealong.vim (vimscript #4691) provides a :Movealong command (and optional
+- movealong.vim ([vimscript #4691](http://www.vim.org/scripts/script.php?script_id=4691)) provides a :Movealong command (and optional
   mappings) that repeatedly executes a motion until a condition of a syntax,
   pattern match, or arbitrary expression is met.
 
-==============================================================================
-USAGE							      *CountJump-usage*
+USAGE
+------------------------------------------------------------------------------
 
-The plugin defines several functions, which set up the appropriate mappings
-based on the arguments that you supply. The following is an overview; you'll
-find the details directly in the implementation files in the
-.vim/autoload/CountJump/ directory.
+    The plugin defines several functions, which set up the appropriate mappings
+    based on the arguments that you supply. The following is an overview; you'll
+    find the details directly in the implementation files in the
+    .vim/autoload/CountJump/ directory.
 
-CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, patternToBegin, patternToEnd, isEndPatternToEnd, ... )
+    CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, patternToBegin, patternToEnd, isEndPatternToEnd, ... )
 
-This function sets up mappings starting with [ and ] for movement (with
-optional [count]) relative to the current cursor position, targeting either a
-text pattern at the beginning ([{keyAfterBracket} mapping) or a text pattern
-at the end (]{inverseKeyAfterBracket} mapping) of whatever you want to treat
-as a text block.
+    This function sets up mappings starting with [ and ] for movement (with
+    optional [count]) relative to the current cursor position, targeting either a
+    text pattern at the beginning ([{keyAfterBracket} mapping) or a text pattern
+    at the end (]{inverseKeyAfterBracket} mapping) of whatever you want to treat
+    as a text block.
 
-CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfterBracket, inverseKeyAfterBracket, JumpToBeginForward, JumpToBeginBackward, JumpToEndForward, JumpToEndBackward, isEndJumpToEnd, ... )
+    CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfterBracket, inverseKeyAfterBracket, JumpToBeginForward, JumpToBeginBackward, JumpToEndForward, JumpToEndBackward, isEndJumpToEnd, ... )
 
-This function sets up mappings starting with [ and ] for movement (with
-optional [count]) relative to the current cursor position, but rely on four
-passed jump functions instead of text patterns to do the movement.
+    This function sets up mappings starting with [ and ] for movement (with
+    optional [count]) relative to the current cursor position, but rely on four
+    passed jump functions instead of text patterns to do the movement.
 
+    CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, types, selectionMode, patternToBegin, patternToEnd )
 
-CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, types, selectionMode, patternToBegin, patternToEnd )
+    Defines a complete set of mappings for inner and/or outer text objects that
+    support an optional [count] and are driven by search patterns for the
+    beginning and end of a block. Outer text objects include the matched pattern
+    text, inner ones not. Selection can be characterwise, linewise or blockwise.
 
-Defines a complete set of mappings for inner and/or outer text objects that
-support an optional [count] and are driven by search patterns for the
-beginning and end of a block. Outer text objects include the matched pattern
-text, inner ones not. Selection can be characterwise, linewise or blockwise.
+    CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, types, selectionMode, JumpToBegin, JumpToEnd )
 
+    This is a generalization of CountJump#TextObject#MakeWithCountSearch() that
+    invokes custom functions instead of searching for a fixed pattern. This is
+    useful if the check for a match is too complex for a single regular
+    expression, or if you need to adjust the match position depending on the
+    circumstances.
 
-CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, types, selectionMode, JumpToBegin, JumpToEnd )
+    Often, a region can be defined as a block of continuous lines that all match a
+    certain pattern (or, even more generic, where a provided predicate function
+    returns a match position). The following functions aid in implementing
+    movements to the boundaries of these regions and text objects consisting of
+    the region:
 
-This is a generalization of CountJump#TextObject#MakeWithCountSearch() that
-invokes custom functions instead of searching for a fixed pattern. This is
-useful if the check for a match is too complex for a single regular
-expression, or if you need to adjust the match position depending on the
-circumstances.
+    CountJump#Region#JumpToRegionEnd( count, Expr, isMatch, step, isToEndOfLine )
 
+    Starting from the current line, search for the position where the count'th
+    region ends. Use this function to build Funcrefs for forward / backward jumps
+    that can then be passed to CountJump#TextObject#MakeWithJumpFunctions().
 
-Often, a region can be defined as a block of continuous lines that all match a
-certain pattern (or, even more generic, where a provided predicate function
-returns a match position). The following functions aid in implementing
-movements to the boundaries of these regions and text objects consisting of
-the region:
+    CountJump#Region#JumpToNextRegion( count, Expr, isMatch, step, isAcrossRegion, isToEndOfLine )
 
-CountJump#Region#JumpToRegionEnd( count, Expr, isMatch, step, isToEndOfLine )
+    Starting from the current line, search for the position where the count'th
+    region begins/ends.
 
-Starting from the current line, search for the position where the count'th
-region ends. Use this function to build Funcrefs for forward / backward jumps
-that can then be passed to CountJump#TextObject#MakeWithJumpFunctions().
+    CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, Expr, isMatch, ... )
 
-CountJump#Region#JumpToNextRegion( count, Expr, isMatch, step, isAcrossRegion, isToEndOfLine )
+    This function sets up mappings starting with [ and ] for movement (with
+    optional [count]) relative to the current cursor position, targeting a text
+    region defined by contiguous lines that (don't) match a:Expr.
 
-Starting from the current line, search for the position where the count'th
-region begins/ends.
+    CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selectionMode, Expr, isMatch )
 
-CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, Expr, isMatch, ... )
+    Defines a complete set of mappings for inner and/or outer text objects that
+    support an optional [count] and select regions of lines which are defined by
+    contiguous lines that (don't) match a:Expr.
+    The inner text object comprises all lines of the region itself, while the
+    outer text object also includes all adjacent lines above and below which do
+    not themselves belong to a region.
 
-This function sets up mappings starting with [ and ] for movement (with
-optional [count]) relative to the current cursor position, targeting a text
-region defined by contiguous lines that (don't) match a:Expr.
+    The custom Funcrefs for jumps and predicates of lines belonging to a range may
+    be invoked multiple times until the CountJump function arrives at its
+    destination. To help the Funcrefs to determine where in this sequence they
+    are, an empty g:CountJump_MotionContext dictionary is initialized at the
+    start of a range motion (for pattern / jump functions, this isn't necessary;
+    there's either no custom code or just a single invocation), and an empty
+    g:CountJump_TextObjectContext dictionary is initialized at the start of a text
+    object. Funcrefs can put custom information (e.g. the particular comment
+    prefix on the current line) in there and evaluate this in subsequent
+    invocations.
 
-CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selectionMode, Expr, isMatch )
-
-Defines a complete set of mappings for inner and/or outer text objects that
-support an optional [count] and select regions of lines which are defined by
-contiguous lines that (don't) match a:Expr.
-The inner text object comprises all lines of the region itself, while the
-outer text object also includes all adjacent lines above and below which do
-not themselves belong to a region.
-
-		   *g:CountJump_MotionContext* *g:CountJump_TextObjectContext*
-The custom Funcrefs for jumps and predicates of lines belonging to a range may
-be invoked multiple times until the CountJump function arrives at its
-destination. To help the Funcrefs to determine where in this sequence they
-are, an empty g:CountJump_MotionContext |dictionary| is initialized at the
-start of a range motion (for pattern / jump functions, this isn't necessary;
-there's either no custom code or just a single invocation), and an empty
-g:CountJump_TextObjectContext dictionary is initialized at the start of a text
-object. Funcrefs can put custom information (e.g. the particular comment
-prefix on the current line) in there and evaluate this in subsequent
-invocations.
-
-==============================================================================
-EXAMPLE							   *CountJump-example*
+EXAMPLE
+------------------------------------------------------------------------------
 
 Let's illustrate the usage by developing custom motions and text objects for
 Pascal begin..end blocks.
 
 We want to move around blocks, and override the default section movements for
 it:
-]]			Go to [count] next start of a block.
-][			Go to [count] next end of a block.
-[[			Go to [count] previous start of a block.
-[]			Go to [count] previous end of a block.
->
+]]                      Go to [count] next start of a block.
+][                      Go to [count] next end of a block.
+[[                      Go to [count] previous start of a block.
+[]                      Go to [count] previous end of a block.
+
     call CountJump#Motion#MakeBracketMotion('<buffer>', '', '', '\c^begin\n\zs', '\c^.*\nend', 0)
 The begin pattern positions the cursor on the beginning of the line following
 the "begin" keyword, the end pattern on the beginning of the line
 preceding the "end" keyword.
 
-
 We want to select a block, either including or excluding the lines with the
 begin..end keywords:
-ib			"inner block" text object, select [count] contents of
-			a block.
-ab			"a block" text object, select [count] blocks.
->
+ib                      "inner block" text object, select [count] contents of
+                        a block.
+ab                      "a block" text object, select [count] blocks.
+
     call CountJump#TextObject#MakeWithCountSearch('<buffer>', 'b', 'ai', 'V', '\c^begin\n', '\c^end.*$')
 
 If there is a filetype detection for Pascal files, we can simply put the
-above calls in a ~/.vim/ftplugin/pascal_movement.vim script and are done.
+```
+above calls in a ~/.vim/ftplugin/pascal\_movement.vim script and are done.
+```
 
-==============================================================================
-INSTALLATION					       *CountJump-installation*
+INSTALLATION
+------------------------------------------------------------------------------
 
 The code is hosted in a Git repo at
     https://github.com/inkarkat/vim-CountJump
 You can use your favorite plugin manager, or "git clone" into a directory used
-for Vim |packages|. Releases are on the "stable" branch, the latest unstable
+for Vim packages. Releases are on the "stable" branch, the latest unstable
 development snapshot on "master".
 
-This script is also packaged as a |vimball|. If you have the "gunzip"
-decompressor in your PATH, simply edit the *.vmb.gz package in Vim; otherwise,
+This script is also packaged as a vimball. If you have the "gunzip"
+decompressor in your PATH, simply edit the \*.vmb.gz package in Vim; otherwise,
 decompress the archive first, e.g. using WinZip. Inside Vim, install by
-sourcing the vimball or via the |:UseVimball| command. >
+sourcing the vimball or via the :UseVimball command.
+
     vim CountJump*.vmb.gz
     :so %
-To uninstall, use the |:RmVimball| command.
 
-DEPENDENCIES					       *CountJump-dependencies*
+To uninstall, use the :RmVimball command.
+
+### DEPENDENCIES
 
 - Requires Vim 7.0 or higher.
-- |ingo-library.vim| plugin (vimscript #4433), version 1.019 or higher
+- ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.019 or higher
   (optional).
 
-==============================================================================
-INTEGRATION						*CountJump-integration*
-			    *CountJump-remap-motions* *CountJump-plug-motions*
+INTEGRATION
+------------------------------------------------------------------------------
+
 If you want to define motions that do not start with [ / ], and the plugin
 that employs CountJump offers a configuration variable like
-g:PluginName_mapping to influence the mapped key(s), you can define
-intermediate <Plug>-mappings (|using-<Plug>|), and then define your own custom
-mappings based on them: >
+g:PluginName\_mapping to influence the mapped key(s), you can define
+intermediate <Plug>-mappings (using-<Plug>), and then define your own custom
+mappings based on them:
+
     let g:PluginName_mapping = '<Plug>PluginName%s'
     nmap { <Plug>PluginNameBackward
     nmap } <Plug>PluginNameForward
@@ -232,23 +218,21 @@ mappings based on them: >
     omap } <Plug>PluginNameForward
     vmap { <Plug>PluginNameBackward
     vmap } <Plug>PluginNameForward
-<
-		  *CountJump-remap-text-objects* *CountJump-plug-text-objects*
+
 If you want to define text objects that do not start with i / a, and the plugin
 that employs CountJump offers a configuration variable like
-g:PluginName_mapping to influence the mapped key(s), you can define
-intermediate <Plug>-mappings (|using-<Plug>|), and then define your own custom
-mappings based on them: >
+g:PluginName\_mapping to influence the mapped key(s), you can define
+intermediate <Plug>-mappings (using-<Plug>), and then define your own custom
+mappings based on them:
+
     let g:PluginName_mapping = '<Plug>PluginName%s'
     omap ,p <Plug>PluginNameInner
     omap ,P <Plug>PluginNameOuter
     vmap ,p <Plug>PluginNameInner
     vmap ,P <Plug>PluginNameOuter
-<
-==============================================================================
-LIMITATIONS						*CountJump-limitations*
 
-KNOWN PROBLEMS					     *CountJump-known-problems*
+KNOWN PROBLEMS
+------------------------------------------------------------------------------
 
 - An outer text object cannot consist of the same, multiple characters;
   nothing will be selected (because the end pattern also matches at the begin
@@ -260,41 +244,39 @@ KNOWN PROBLEMS					     *CountJump-known-problems*
   /pattern search, we print the wrap message, but don't print an error message
   (like "Pattern not found"), but beep instead (like the built-in ]m etc.
   mappings (but not the ), }, ]] mappings, which fail silently?!)).
-- A repeat (via |.|) of the operator-pending mapping loses the previously
+- A repeat (via .) of the operator-pending mapping loses the previously
   given [count], and operates on just one search / jump.
 
-TODO							       *CountJump-todo*
-
-IDEAS							      *CountJump-ideas*
+### IDEAS
 
 - Add customization parameter so that the motion / text object includes the
   start / end of buffer in case patternToBegin / patternToEnd do not match any
   more.
 
-CONTRIBUTING			*CountJump-contribute*
+### CONTRIBUTING
 
 Report any bugs, send patches, or suggest features via the issue tracker at
 https://github.com/inkarkat/vim-CountJump/issues or email (address below).
 
-==============================================================================
-HISTORY							    *CountJump-history*
+HISTORY
+------------------------------------------------------------------------------
 
-1.90	11-Feb-2018
-- Rename g:CountJump_Context to g:CountJump_MotionContext, to avoid a clash
+##### 1.90    11-Feb-2018
+- Rename g:CountJump\_Context to g:CountJump\_MotionContext, to avoid a clash
   with the text object in CountJump#TextObject#TextObjectWithJumpFunctions().
-  Clear g:CountJump_MotionContext at the end of the function.
-- Rename g:CountJump_Context to g:CountJump_TextObjectContext. When using
+  Clear g:CountJump\_MotionContext at the end of the function.
+- Rename g:CountJump\_Context to g:CountJump\_TextObjectContext. When using
   CountJump#Region#TextObject#Make(), the generated jump functions also set
   that context, and there's a clash with
   CountJump#TextObject#TextObjectWithJumpFunctions(). In particular, one
   cannot store a context for the entire text object (both jumps to begin and
   end), as the individual jump functions clear the identical context. Clear
-  g:CountJump_TextObjectContext at the end of the function.
+  g:CountJump\_TextObjectContext at the end of the function.
 - ENH: Support non-argument Funcref for a:Expr that gets evaluated once at the
   beginning, and should yield a regular expression that is then used in its
   stead.
 
-1.86	24-Jul-2017
+##### 1.86    24-Jul-2017
 - CountJump#Motion#MakeBracketMotion(): The a:patternToBegin, a:patternToEnd,
   a:searchName arguments may contain special characters that need escaping in
   a map. Use ingo#escape#command#mapescape().
@@ -314,14 +296,14 @@ HISTORY							    *CountJump-history*
   :quit<Enter>  to exit Vim", suppress the Vim:Interrupt exception, and
   :echoerr all others.
 
-1.85	23-Dec-2014
+##### 1.85    23-Dec-2014
 - Use ingo/pos.vim.
 - Use ingo#msg#WarningMsg().
 - Make test for 'virtualedit' option values also account for multiple values.
-  *** You need to install / update to ingo-library (vimscript #4433) version
-  1.019! It is now mandatory for the plugin. ***
+  __You need to install / update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version
+  1.019! It is now mandatory for the plugin.__
 
-1.84	25-Apr-2014
+##### 1.84    25-Apr-2014
 - Pin down the 'virtualedit' setting (to "onemore") during
   CountJump#TextObject#TextObjectWithJumpFunctions() to avoid that a
   characterwise outer text object that ends at the end of a line includes the
@@ -334,22 +316,22 @@ HISTORY							    *CountJump-history*
   CountJump#Region#TextObject#Make() buffer-scoped by prefixing "s:B" and the
   buffer number.
 
-1.83	23-Jan-2014
+##### 1.83    23-Jan-2014
 - Use more canonical way of invoking the Funcrefs in
   CountJump#Motion#MakeBracketMotionWithJumpFunctions(); this will then also
   work with passed String function names.
 - FIX: Need to save v:count1 before issuing the normal mode "gv" command.
 - Minor: Make substitute() robust against 'ignorecase'.
-- Add optional dependency to ingo-library (vimscript #4433).
+- Add optional dependency to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)).
 
-1.82	30-Oct-2012 (unreleased)
+##### 1.82    30-Oct-2012 (unreleased)
 - FIX: In text objects, when the end position is before the begin position,
   that's not a valid selection. Test for this and abort in that case.
 - For linewise selections, always position the cursor at the start of the end
   line to be consistent with the built-in text objects, and to avoid
   complicating the search patterns when attempting to do this through them.
 
-1.81	16-Oct-2012
+##### 1.81    16-Oct-2012
 - ENH: Add optional a:searchName argument to
   CountJump#Motion#MakeBracketMotion() to make searches wrap around when
   'wrapscan' is set. Custom jump functions can do this since version 1.70;
@@ -357,7 +339,7 @@ HISTORY							    *CountJump-history*
 - BUG: Wrong variable scope for copied a:isBackward in
   CountJump#CountSearchWithWrapMessage().
 
-1.80	15-Oct-2012
+##### 1.80    15-Oct-2012
 - FIX: In CountJump#TextObject#TextObjectWithJumpFunctions(), do not beep when
   there's no end position. In this case, the jump function (often
   CountJump#CountSearch()) should have emitted a beep already, and we want to
@@ -375,7 +357,7 @@ HISTORY							    *CountJump-history*
 - Clear any previous wrap message when wrapping is enabled; it's confusing
   otherwise.
 
-1.70	03-Sep-2012
+##### 1.70    03-Sep-2012
 - ENH: Check for searches wrapping around the buffer and issue a corresponding
   warning, like the built-in searches do. Though the mappings that can be made
   with CountJump currently do not use 'wrapscan', other plugins that define
@@ -383,27 +365,27 @@ HISTORY							    *CountJump-history*
   may use it. Create function overloads CountJump#CountJumpWithWrapMessage()
   and CountJump#CountSearchWithWrapMessage().
 
-1.60	27-Mar-2012
+##### 1.60    27-Mar-2012
 - ENH: Allow motions that do not start with [ / ] and text objects that do not
   start with i / a by passing keys that begin with <Plug>. With this, plugins
   using CountJump can offer the expected customizability. Since most users
   probably still prefer the default keys, it is recommended that plugins do
   not use <Plug> mappings from the start, but make the a:keyAfterBracket /
   a:inverseKeyAfterBracket / a:textObjectKey configurable via a
-  g:PluginName_mapping variable, and instruct users to set this to
+  g:PluginName\_mapping variable, and instruct users to set this to
   "<Plug>PluginName%s" and create their own mappings based on them, as
-  described in |CountJump-integration|.
+  described in CountJump-integration.
 
-1.50	30-Aug-2011
+##### 1.50    30-Aug-2011
 - For regions of lines, also support a match()-like Funcref instead of a
   pattern to define the range. This for example enables to define a range of
-  diff changes via a predicate function that checks diff_hlID() != 0.
-- Initialize global g:CountJump_Context object for custom use by Funcrefs.
+  diff changes via a predicate function that checks diff\_hlID() != 0.
+- Initialize global g:CountJump\_Context object for custom use by Funcrefs.
 
-1.41	13-Jun-2011
+##### 1.41    13-Jun-2011
 - FIX: Directly ring the bell to avoid problems when running under :silent!.
 
-1.40	20-Dec-2010
+##### 1.40    20-Dec-2010
 - ENH: Added CountJump#Region#TextObject#Make() to easily define text objects
   for regions.
 - Interface change: Jump functions again return position (and actual,
@@ -411,7 +393,7 @@ HISTORY							    *CountJump-history*
   motions, it is necessary for text objects to differentiate between "already
   at the begin/end position" and "no such position".
 
-1.30	20-Dec-2010
+##### 1.30    20-Dec-2010
 - ENH: Added CountJump#Region#Motion#MakeBracketMotion() to easily define
   bracket motions for regions.
 - Interface changes:
@@ -429,11 +411,11 @@ HISTORY							    *CountJump-history*
     non-matches, which can be substantially simpler (and faster to match) than
     coming up with a "negative" regular expression.
 
-1.22	06-Aug-2010
+##### 1.22    06-Aug-2010
 - No more motion mappings and text objects for select mode; as the mappings
   start with a printable character, no select-mode mapping should be defined.
 
-1.21	03-Aug-2010
+##### 1.21    03-Aug-2010
 - FIX: A 2]] jump inside a region (unless last line) jumped like a 1]] jump.
   The search for next region must not decrease the iteration counter when
   _not_ searching _across_ the region.
@@ -442,7 +424,7 @@ HISTORY							    *CountJump-history*
 - Switched example from email fortunes to Pascal begin..end blocks, as they
   are conceptually easier.
 
-1.20	02-Aug-2010
+##### 1.20    02-Aug-2010
 - ENH: In CountJump#Motion#MakeBracketMotion(), a:keyAfterBracket and
   a:inverseKeyAfterBracket can now be empty, the resulting mappings are then
   omitted. Likewise, any jump function can be empty in
@@ -461,7 +443,7 @@ HISTORY							    *CountJump-history*
   do not cause beeps if that movement cannot be done (e.g. a 'j' at the end of
   the buffer).
 
-1.10    19-Jul-2010
+##### 1.10    19-Jul-2010
 - Changed behavior if there aren't [count] matches: Instead of jumping to the
   last available match (and ringing the bell), the cursor stays at the
   original position, like with the old vi-compatible motions.
@@ -470,16 +452,14 @@ HISTORY							    *CountJump-history*
 - FIX: For a linewise text object, the end cursor column is not important; do
   not compare with the original cursor column in this case.
 
-1.00	22-Jun-2010
-First published version.
+##### 1.00    22-Jun-2010
+- First published version.
 
-0.01	14-Feb-2009
-Started development.
+##### 0.01    14-Feb-2009
+- Started development.
 
-==============================================================================
-Copyright: (C) 2009-2018 Ingo Karkat
-The VIM LICENSE applies to this plugin; see |copyright|.
+------------------------------------------------------------------------------
+Copyright: (C) 2009-2018 Ingo Karkat -
+The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
-Maintainer:	Ingo Karkat <ingo@karkat.de>
-==============================================================================
- vim:tw=78:ts=8:ft=help:norl:
+Maintainer:     Ingo Karkat <ingo@karkat.de>
