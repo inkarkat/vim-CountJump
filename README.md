@@ -261,7 +261,7 @@ https://github.com/inkarkat/vim-CountJump/issues or email (address below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 1.90    RELEASEME
+##### 1.90    11-Feb-2018
 - Rename g:CountJump\_Context to g:CountJump\_MotionContext, to avoid a clash
   with the text object in CountJump#TextObject#TextObjectWithJumpFunctions().
   Clear g:CountJump\_MotionContext at the end of the function.
