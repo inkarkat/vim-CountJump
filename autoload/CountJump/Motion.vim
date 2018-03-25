@@ -5,7 +5,7 @@
 "   - ingo/escape/command.vim autoload script
 "   - ingo/msg.vim autoload script
 "
-" Copyright: (C) 2009-2017 Ingo Karkat
+" Copyright: (C) 2009-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -98,7 +98,7 @@ set cpo&vim
 " This mapping scheme is extracted from $VIMRUNTIME/ftplugin/vim.vim. It
 " enhances the original mappings so that a [count] can be specified, and folds
 " at the found search position are opened.
-function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, patternToBegin, patternToEnd, isEndPatternToEnd, ... )
+function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, PatternToBegin, PatternToEnd, isEndPatternToEnd, ... )
 "*******************************************************************************
 "* PURPOSE:
 "   Define a complete set of mappings for a [x / ]x motion (e.g. like the
@@ -138,8 +138,12 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 "   default [[ and ]] mappings are overwritten. (Note that this is different
 "   from passing ']' and '[', respectively, because the back motions are
 "   swapped.)
-"   a:patternToBegin	Search pattern to locate the beginning of a block.
-"   a:patternToEnd	Search pattern to locate the end of a block.
+"   a:PatternToBegin	Search pattern to locate the beginning of a block.
+"			Or Funcref to a function that takes no arguments and
+"			returns the search arguments (as a List).
+"   a:PatternToEnd	Search pattern to locate the end of a block.
+"			Or Funcref to a function that takes no arguments and
+"			returns the search arguments (as a List).
 "   a:isEndPatternToEnd	Flag that specifies whether a jump to the end of a block
 "			will be to the end of the match. This makes it easier to
 "			write an end pattern for characterwise motions (like
@@ -172,20 +176,20 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 
     if empty(a:keyAfterBracket) && empty(a:inverseKeyAfterBracket)
 	let l:dataset = [
-	\   [ 0, '[[', a:patternToBegin, 'b' . l:wrapFlag ],
-	\   [ 0, ']]', a:patternToBegin, ''  . l:wrapFlag ],
-	\   [ 1, '[]', a:patternToEnd,   'b' . l:wrapFlag . l:endMatch ],
-	\   [ 1, '][', a:patternToEnd,   ''  . l:wrapFlag . l:endMatch ],
+	\   [ 0, '[[', a:PatternToBegin, 'b' . l:wrapFlag ],
+	\   [ 0, ']]', a:PatternToBegin, ''  . l:wrapFlag ],
+	\   [ 1, '[]', a:PatternToEnd,   'b' . l:wrapFlag . l:endMatch ],
+	\   [ 1, '][', a:PatternToEnd,   ''  . l:wrapFlag . l:endMatch ],
 	\]
     else
 	let l:dataset = []
 	if ! empty(a:keyAfterBracket)
-	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(0, a:keyAfterBracket), a:patternToBegin, 'b' . l:wrapFlag ])
-	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(1, a:keyAfterBracket), a:patternToBegin, ''  . l:wrapFlag ])
+	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(0, a:keyAfterBracket), a:PatternToBegin, 'b' . l:wrapFlag ])
+	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(1, a:keyAfterBracket), a:PatternToBegin, ''  . l:wrapFlag ])
 	endif
 	if ! empty(a:inverseKeyAfterBracket)
-	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(0, a:inverseKeyAfterBracket), a:patternToEnd, 'b' . l:wrapFlag . l:endMatch ])
-	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(1, a:inverseKeyAfterBracket), a:patternToEnd, ''  . l:wrapFlag . l:endMatch ])
+	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(0, a:inverseKeyAfterBracket), a:PatternToEnd, 'b' . l:wrapFlag . l:endMatch ])
+	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(1, a:inverseKeyAfterBracket), a:PatternToEnd, ''  . l:wrapFlag . l:endMatch ])
 	endif
     endif
     for l:mode in l:mapModes
@@ -196,9 +200,9 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 	    \	    a:mapArgs,
 	    \	    l:data[1],
 	    \	    string(l:data[0] && a:isEndPatternToEnd ? toupper(l:mode) : l:mode),
-	    \       string(ingo#escape#command#mapescape(l:searchName)),
-	    \	    string(ingo#escape#command#mapescape(l:data[2])),
-	    \	    string(ingo#escape#command#mapescape(l:data[3]))
+	    \       ingo#escape#command#mapescape(string(l:searchName)),
+	    \	    ingo#escape#command#mapescape(string(l:data[2])),
+	    \	    ingo#escape#command#mapescape(string(l:data[3]))
 	    \   ), '|'
 	    \)
 	endfor

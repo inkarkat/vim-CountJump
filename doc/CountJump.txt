@@ -279,6 +279,10 @@ https://github.com/inkarkat/vim-CountJump/issues or email (address below).
 ==============================================================================
 HISTORY							    *CountJump-history*
 
+1.91	RELEASEME
+- ENH: Allow Funcref for a:searchArguments / first search argument /
+  a:patternTo{Begin,End}
+
 1.90	11-Feb-2018
 - Rename g:CountJump_Context to g:CountJump_MotionContext, to avoid a clash
   with the text object in CountJump#TextObject#TextObjectWithJumpFunctions().

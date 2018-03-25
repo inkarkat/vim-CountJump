@@ -5,7 +5,7 @@
 "   - ingo/pos.vim autoload script
 "   - ingo/motion/helper.vim autoload script (optional)
 "
-" Copyright: (C) 2009-2015 Ingo Karkat
+" Copyright: (C) 2009-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -109,7 +109,7 @@ function! s:WrapMessage( searchName, isBackward )
 	call ingo#msg#WarningMsg(a:searchName . ' ' . (a:isBackward ? 'hit TOP, continuing at BOTTOM' : 'hit BOTTOM, continuing at TOP'))
     endif
 endfunction
-function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArguments )
+function! CountJump#CountSearchWithWrapMessage( count, searchName, SearchArguments )
 "*******************************************************************************
 "* PURPOSE:
 "   Search for the a:count'th occurrence of the passed search() pattern and
@@ -127,15 +127,20 @@ function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArgumen
 "   a:searchName    Object to be searched; used as the subject in the message
 "		    when the search wraps: "a:searchName hit BOTTOM, continuing
 "		    at TOP". When empty, no wrap message is issued.
-"   a:searchArguments	Arguments to search() as a List [{pattern}, {flags}, ...]
+"   a:SearchArguments	Arguments to search() as a List [{pattern}, {flags}, ...]
+"			Or Funcref to a function that takes no arguments and
+"			returns the search arguments (as a List).
+"                       First search argument (pattern) may also be a Funcref
+"                       that takes no arguments and returns the pattern.
 "
 "* RETURN VALUES:
 "   List with the line and column position, or [0, 0], like searchpos().
 "*******************************************************************************
     let l:save_view = winsaveview()
-    let l:searchArguments = copy(a:searchArguments)
+    let l:searchArguments = (type(a:SearchArguments) == 2 ? call(a:SearchArguments, []) : copy(a:SearchArguments))
+    if type(l:searchArguments[0]) == 2 | let l:searchArguments[0] = call(l:searchArguments[0], []) | endif
     let l:isWrapped = 0
-    let l:isBackward = (get(a:searchArguments, 1, '') =~# 'b')
+    let l:isBackward = (get(l:searchArguments, 1, '') =~# 'b')
     let [l:prevLine, l:prevCol] = [line('.'), col('.')]
 
     for l:i in range(1, a:count)
@@ -193,8 +198,8 @@ function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArgumen
 
     return l:matchPosition
 endfunction
-function! CountJump#CountSearch( count, searchArguments )
-    return CountJump#CountSearchWithWrapMessage(a:count, '', a:searchArguments)
+function! CountJump#CountSearch( count, SearchArguments )
+    return CountJump#CountSearchWithWrapMessage(a:count, '', a:SearchArguments)
 endfunction
 function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 "*******************************************************************************
@@ -218,6 +223,10 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 "		    when the search wraps: "a:searchName hit BOTTOM, continuing
 "		    at TOP". When empty, no wrap message is issued.
 "   ...	    Arguments to search().
+"           Or Funcref to a function that takes no arguments and returns the
+"           search arguments (as a List).
+"           First search argument (pattern) may also be a Funcref that takes no
+"           arguments and returns the pattern.
 "
 "* RETURN VALUES:
 "   None.

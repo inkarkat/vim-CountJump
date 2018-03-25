@@ -175,9 +175,7 @@ ab                      "a block" text object, select [count] blocks.
     call CountJump#TextObject#MakeWithCountSearch('<buffer>', 'b', 'ai', 'V', '\c^begin\n', '\c^end.*$')
 
 If there is a filetype detection for Pascal files, we can simply put the
-```
 above calls in a ~/.vim/ftplugin/pascal\_movement.vim script and are done.
-```
 
 INSTALLATION
 ------------------------------------------------------------------------------
@@ -262,6 +260,10 @@ https://github.com/inkarkat/vim-CountJump/issues or email (address below).
 
 HISTORY
 ------------------------------------------------------------------------------
+
+##### 1.91    RELEASEME
+- ENH: Allow Funcref for a:searchArguments / first search argument /
+  a:patternTo{Begin,End}
 
 ##### 1.90    11-Feb-2018
 - Rename g:CountJump\_Context to g:CountJump\_MotionContext, to avoid a clash
