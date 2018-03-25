@@ -201,7 +201,7 @@ endfunction
 function! CountJump#CountSearch( count, SearchArguments )
     return CountJump#CountSearchWithWrapMessage(a:count, '', a:SearchArguments)
 endfunction
-function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
+function! CountJump#CountCountJumpWithWrapMessage( count, mode, searchName, ... )
 "*******************************************************************************
 "* PURPOSE:
 "   Implement a custom motion by jumping to the <count>th occurrence of the
@@ -216,6 +216,7 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 "   If the pattern doesn't match (a:count times), a beep is emitted.
 "
 "* INPUTS:
+"   a:count Which match should be jumped to.
 "   a:mode  Mode in which the search is invoked. Either 'n', 'v' or 'o'.
 "	    Uppercase letters indicate special additional treatment for end
 "	    patterns to end.
@@ -232,7 +233,7 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 "   None.
 "*******************************************************************************
     let l:save_view = winsaveview()
-    let l:count = v:count1
+    let l:count = a:count
 
     if a:mode ==? 'v'
 	normal! gv
@@ -250,6 +251,9 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 	    call ingo#motion#helper#AdditionalMovement(a:mode ==# 'O')
 	endif
     endif
+endfunction
+function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
+    return call('CountJump#CountCountJumpWithWrapMessage', [v:count1, a:mode, a:searchName] + a:000)
 endfunction
 function! CountJump#CountJump( mode, ... )
     " See CountJump#CountJumpWithWrapMessage().

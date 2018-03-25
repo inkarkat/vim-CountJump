@@ -264,6 +264,9 @@ HISTORY
 ##### 1.91    RELEASEME
 - ENH: Allow Funcref for a:searchArguments / first search argument /
   a:patternTo{Begin,End}
+- ENH: Allow to influence given [count] via
+  CountJump#CountCountJumpWithWrapMessage() variant of
+  CountJump#CountJumpWithWrapMessage().
 
 ##### 1.90    11-Feb-2018
 - Rename g:CountJump\_Context to g:CountJump\_MotionContext, to avoid a clash
