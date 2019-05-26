@@ -5,7 +5,7 @@
 "   - ingo/escape/command.vim autoload script
 "   - ingo/msg.vim autoload script
 "
-" Copyright: (C) 2009-2018 Ingo Karkat
+" Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -119,14 +119,16 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
     for l:mode in l:mapModes
 	for l:data in l:dataset
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#CountJumpWithWrapMessage(%s, %s, %s, %s)<CR>",
-	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
-	    \	    a:mapArgs,
-	    \	    l:data[1],
-	    \	    string(l:data[0] && a:isEndPatternToEnd ? toupper(l:mode) : l:mode),
-	    \       ingo#escape#command#mapescape(string(l:searchName)),
-	    \	    ingo#escape#command#mapescape(string(l:data[2])),
-	    \	    ingo#escape#command#mapescape(string(l:data[3]))
+	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#Mapping('CountJump#CountJumpWithWrapMessage', %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
+	    \       (l:mode ==# 'v' ? 'x' : l:mode),
+	    \       a:mapArgs,
+	    \       l:data[1],
+	    \       ingo#escape#command#mapescape(string([
+	    \           (l:data[0] && a:isEndPatternToEnd ? toupper(l:mode) : l:mode),
+	    \           l:searchName,
+	    \           l:data[2],
+	    \           l:data[3]
+	    \       ]))
 	    \   ), '|'
 	    \)
 	endfor
@@ -234,12 +236,14 @@ function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfter
     for l:mode in l:mapModes
 	for l:data in l:dataset
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-u>try<Bar>call call(%s, [%s])<Bar>catch<Bar>if v:exception !~# '^\\%(Vim:\\)\\?Interrupt$'<Bar>echoerr ingo#msg#MsgFromVimException()<Bar>endif<Bar>endtry<CR>",
-	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
-	    \	    a:mapArgs,
-	    \	    l:data[1],
-	    \	    string(l:data[2]),
-	    \	    string(l:data[0] && a:isEndJumpToEnd ? toupper(l:mode) : l:mode)
+	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#Mapping(%s, %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
+	    \       (l:mode ==# 'v' ? 'x' : l:mode),
+	    \       a:mapArgs,
+	    \       l:data[1],
+	    \       string(l:data[2]),
+	    \       string([
+	    \           (l:data[0] && a:isEndJumpToEnd ? toupper(l:mode) : l:mode)
+	    \       ])
 	    \   ), '|'
 	    \)
 	endfor

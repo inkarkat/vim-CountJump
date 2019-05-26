@@ -5,7 +5,7 @@
 "   - ingo/pos.vim autoload script
 "   - ingo/motion/helper.vim autoload script (optional)
 "
-" Copyright: (C) 2009-2018 Ingo Karkat
+" Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -326,6 +326,19 @@ endfunction
 function! CountJump#CountJumpFunc( count, SingleJumpFunc, ... )
     " See CountJump#CountJumpFuncWithWrapMessage().
     return call('CountJump#CountJumpFuncWithWrapMessage', [a:count, '', 0, a:SingleJumpFunc] + a:000)
+endfunction
+function! CountJump#Mapping( Function, arguments ) abort
+    try
+	call call(a:Function, a:arguments)
+    catch /^CountJump:/
+	call ingo#err#SetCustomException('CountJump')
+	return 0
+    catch '^\%(Vim:\)\?Interrupt$'
+	return 1
+    catch
+	call ingo#err#SetVimException()
+	return 0
+    endtry
 endfunction
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

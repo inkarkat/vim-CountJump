@@ -4,7 +4,7 @@
 "   - CountJump.vim, CountJump/Mappings.vim autoload scripts
 "   - ingo/pos.vim autoload script
 "
-" Copyright: (C) 2009-2017 Ingo Karkat
+" Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -358,16 +358,18 @@ function! CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, ty
 	endif
 	for l:mode in ['o', 'v']
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-u>try<Bar>call CountJump#TextObject#TextObjectWithJumpFunctions('%s', %s, %s, '%s', %s, %s)<Bar>catch<Bar>if v:exception !~# '^\\%(Vim:\\)\\?Interrupt$'<Bar>echoerr ingo#msg#MsgFromVimException()<Bar>endif<Bar>endtry<CR>",
-	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
-	    \	    a:mapArgs,
-	    \	    CountJump#Mappings#MakeTextObjectKey(tolower(l:type), a:textObjectKey),
-	    \	    l:mode,
-	    \	    l:isInner,
-	    \	    l:isExcludeBoundaries,
-	    \	    a:selectionMode,
-	    \	    string(a:JumpToBegin),
-	    \	    string(a:JumpToEnd)
+	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#Mapping('CountJump#TextObject#TextObjectWithJumpFunctions', %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
+	    \       (l:mode ==# 'v' ? 'x' : l:mode),
+	    \       a:mapArgs,
+	    \       CountJump#Mappings#MakeTextObjectKey(tolower(l:type), a:textObjectKey),
+	    \       string([
+	    \           l:mode,
+	    \           l:isInner,
+	    \           l:isExcludeBoundaries,
+	    \           a:selectionMode,
+	    \           a:JumpToBegin,
+	    \           a:JumpToEnd
+	    \       ])
 	    \   ), '|'
 	    \)
 	endfor

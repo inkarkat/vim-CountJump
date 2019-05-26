@@ -5,7 +5,7 @@
 "   - CountJump.vim, CountJump/Mappings.vim, CountJump/Region.vim autoload scripts.
 "   - ingo/escape/command.vim autoload script
 "
-" Copyright: (C) 2010-2017 Ingo Karkat
+" Copyright: (C) 2010-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -127,16 +127,19 @@ function! CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, i
 	for l:data in l:dataset
 	    let l:useToEndOfLine = (l:mode ==# 'n' ? 0 : l:data[3])
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-u>try<Bar>call CountJump#JumpFunc(%s, 'CountJump#Region#JumpToNextRegion', %s, %d, %d, %d, %d)<Bar>catch<Bar>if v:exception !~# '^\\%(Vim:\\)\\?Interrupt$'<Bar>echoerr ingo#msg#MsgFromVimException()<Bar>endif<Bar>endtry<CR>",
-	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
-	    \	    a:mapArgs,
-	    \	    l:data[0],
-	    \	    string(l:mode ==# 'o' && l:useToEndOfLine ? 'O' : l:mode),
-	    \	    ingo#escape#command#mapescape(string(a:Expr)),
-	    \	    a:isMatch,
-	    \	    l:data[1],
-	    \	    l:data[2],
-	    \	    l:useToEndOfLine
+	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#Mapping('CountJump#JumpFunc', %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
+	    \       (l:mode ==# 'v' ? 'x' : l:mode),
+	    \       a:mapArgs,
+	    \       l:data[0],
+	    \       ingo#escape#command#mapescape(string([
+	    \           (l:mode ==# 'o' && l:useToEndOfLine ? 'O' : l:mode),
+	    \           'CountJump#Region#JumpToNextRegion',
+	    \           a:Expr,
+	    \           a:isMatch,
+	    \           l:data[1],
+	    \           l:data[2],
+	    \           l:useToEndOfLine
+	    \       ]))
 	    \   ), '|'
 	    \)
 	endfor
