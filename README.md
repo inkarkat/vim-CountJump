@@ -1,4 +1,4 @@
-COUNT JUMP   
+COUNT JUMP
 ===============================================================================
 _by Ingo Karkat_
 
@@ -23,7 +23,7 @@ single regular expression, the jump may need adapting depending on the
 context, or other uses.
 This plugin contains some support for movement and text objects consisting of
 text regions that can be defined by continuous lines that match a particular
-pattern, e.g. comment blocks that all start with /^\s\*#/.
+pattern, e.g. comment blocks that all start with /^\\s\*#/.
 
 ### SEE ALSO
 
@@ -31,32 +31,35 @@ The following ftplugins use this plugin:
 
 - diff\_movement.vim ([vimscript #3180](http://www.vim.org/scripts/script.php?script_id=3180)):
   Movement over diff hunks with ]] etc.
+- diffwindow\_movement.vim ([vimscript #3719](http://www.vim.org/scripts/script.php?script_id=3719)):
+  Movement over changes in a diff window.
+- dosbatch\_movement.vim ([vimscript #4004](http://www.vim.org/scripts/script.php?script_id=4004)):
+  Movement over MSDOS batch file functions / labels with ]m etc.
 - fortunes\_movement.vim ([vimscript #3181](http://www.vim.org/scripts/script.php?script_id=3181)):
   Movement over email fortunes with ]] etc.
 - help\_movement.vim ([vimscript #3179](http://www.vim.org/scripts/script.php?script_id=3179)):
   Movement over Vim help sections with ]] etc.
 - mail\_movement.vim ([vimscript #3182](http://www.vim.org/scripts/script.php?script_id=3182)):
   Movement over email quotes with ]] etc.
-- diffwindow\_movement.vim ([vimscript #3719](http://www.vim.org/scripts/script.php?script_id=3719)):
-  Movement over changes in a diff window.
-- JumpToTrailingWhitespace.vim ([vimscript #3968](http://www.vim.org/scripts/script.php?script_id=3968)):
-  Motions to locate unwanted whitespace at the end of lines.
-- TaskMotion.vim ([vimscript #3990](http://www.vim.org/scripts/script.php?script_id=3990)):
-  Motions to task and TODO markers.
-- ConflictMotions.vim ([vimscript #3991](http://www.vim.org/scripts/script.php?script_id=3991)):
-  Motions to and inside SCM conflict markers.
-- vim\_movement.vim ([vimscript #4002](http://www.vim.org/scripts/script.php?script_id=4002)):
-  Movement over Vim functions with ]m etc.
 - vbs\_movement.vim ([vimscript #4003](http://www.vim.org/scripts/script.php?script_id=4003)):
   Movement over VBScript classes / functions / properties / subs with ]m etc.
-- dosbatch\_movement.vim ([vimscript #4004](http://www.vim.org/scripts/script.php?script_id=4004)):
-  Movement over MSDOS batch file functions / labels with ]m etc.
-- SameSyntaxMotion.vim ([vimscript #4338](http://www.vim.org/scripts/script.php?script_id=4338)):
-  Motions to the borders of the same syntax highlighting.
+- vim\_movement.vim ([vimscript #4002](http://www.vim.org/scripts/script.php?script_id=4002)):
+  Movement over Vim functions with ]m etc.
+
+The following plugins offer new motions through this plugin:
+
+- ConflictMotions.vim ([vimscript #3991](http://www.vim.org/scripts/script.php?script_id=3991)):
+  Motions to and inside SCM conflict markers.
+- JumpToTrailingWhitespace.vim ([vimscript #3968](http://www.vim.org/scripts/script.php?script_id=3968)):
+  Motions to locate unwanted whitespace at the end of lines.
 - JumpToVerticalBlock.vim ([vimscript #5657](http://www.vim.org/scripts/script.php?script_id=5657)):
   Like W / E, but vertically in the same column.
 - JumpToVerticalOccurrence.vim ([vimscript #4841](http://www.vim.org/scripts/script.php?script_id=4841)):
   Like f{char}, but searching the same screen column, not line.
+- SameSyntaxMotion.vim ([vimscript #4338](http://www.vim.org/scripts/script.php?script_id=4338)):
+  Motions to the borders of the same syntax highlighting.
+- TaskMotion.vim ([vimscript #3990](http://www.vim.org/scripts/script.php?script_id=3990)):
+  Motions to task and TODO markers.
 
 ### RELATED WORKS
 
@@ -74,7 +77,7 @@ USAGE
     The plugin defines several functions, which set up the appropriate mappings
     based on the arguments that you supply. The following is an overview; you'll
     find the details directly in the implementation files in the
-    .vim/autoload/CountJump/ directory.
+    autoload/CountJump/ directory.
 
     CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, patternToBegin, patternToEnd, isEndPatternToEnd, ... )
 
@@ -208,7 +211,7 @@ INTEGRATION
 If you want to define motions that do not start with [ / ], and the plugin
 that employs CountJump offers a configuration variable like
 g:PluginName\_mapping to influence the mapped key(s), you can define
-intermediate <Plug>-mappings (using-<Plug>), and then define your own custom
+intermediate &lt;Plug&gt;-mappings (using-&lt;Plug&gt;), and then define your own custom
 mappings based on them:
 
     let g:PluginName_mapping = '<Plug>PluginName%s'
@@ -222,7 +225,7 @@ mappings based on them:
 If you want to define text objects that do not start with i / a, and the plugin
 that employs CountJump offers a configuration variable like
 g:PluginName\_mapping to influence the mapped key(s), you can define
-intermediate <Plug>-mappings (using-<Plug>), and then define your own custom
+intermediate &lt;Plug&gt;-mappings (using-&lt;Plug&gt;), and then define your own custom
 mappings based on them:
 
     let g:PluginName_mapping = '<Plug>PluginName%s'
@@ -267,6 +270,10 @@ HISTORY
 - ENH: Allow to influence given [count] via
   CountJump#CountCountJumpWithWrapMessage() variant of
   CountJump#CountJumpWithWrapMessage().
+- FIX: Avoid "Error detected while processing :" additional line above an
+  exception thrown (from a client-supplied Funcref).
+- ENH: Allow client-supplied Funcrefs to throw a "CountJump: &lt;error text&gt;"
+  exception to issue custom errors.
 
 ##### 1.90    11-Feb-2018
 - Rename g:CountJump\_Context to g:CountJump\_MotionContext, to avoid a clash
@@ -296,18 +303,19 @@ HISTORY
   CountJump#TextObject#MakeWithJumpFunctions(),
   CountJump#Region#Motion#MakeBracketMotion(): Catch all exceptions and
   report only the text. My ErrorMotion.vim plugin could be slow to find the
-  next error if there is none. Aborting with <C-c> would print a long
+  next error if there is none. Aborting with &lt;C-c&gt; would print a long
   multi-line exception: "Error detected while processing function
   ErrorMotion#Forward[1]..CountJump#JumpFunc[39]..HlgroupMotion#JumpWithWrapMessage[26]..CountJump#CountJumpFuncWithWrapMessage[35]..HlgroupMotion#SearchFirstHlgroup:
   line   67: Interrupted". As we apparently cannot avoid the printing of "Type
-  :quit<Enter>  to exit Vim", suppress the Vim:Interrupt exception, and
+  :quit&lt;Enter&gt;  to exit Vim", suppress the Vim:Interrupt exception, and
   :echoerr all others.
 
 ##### 1.85    23-Dec-2014
 - Use ingo/pos.vim.
 - Use ingo#msg#WarningMsg().
 - Make test for 'virtualedit' option values also account for multiple values.
-  __You need to install / update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version
+
+__You need to install / update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version
   1.019! It is now mandatory for the plugin.__
 
 ##### 1.84    25-Apr-2014
@@ -374,13 +382,13 @@ HISTORY
 
 ##### 1.60    27-Mar-2012
 - ENH: Allow motions that do not start with [ / ] and text objects that do not
-  start with i / a by passing keys that begin with <Plug>. With this, plugins
+  start with i / a by passing keys that begin with &lt;Plug&gt;. With this, plugins
   using CountJump can offer the expected customizability. Since most users
   probably still prefer the default keys, it is recommended that plugins do
-  not use <Plug> mappings from the start, but make the a:keyAfterBracket /
+  not use &lt;Plug&gt; mappings from the start, but make the a:keyAfterBracket /
   a:inverseKeyAfterBracket / a:textObjectKey configurable via a
   g:PluginName\_mapping variable, and instruct users to set this to
-  "<Plug>PluginName%s" and create their own mappings based on them, as
+  "&lt;Plug&gt;PluginName%s" and create their own mappings based on them, as
   described in CountJump-integration.
 
 ##### 1.50    30-Aug-2011
@@ -466,7 +474,7 @@ HISTORY
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2009-2018 Ingo Karkat -
+Copyright: (C) 2009-2019 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
-Maintainer:     Ingo Karkat <ingo@karkat.de>
+Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
