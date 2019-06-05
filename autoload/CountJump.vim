@@ -330,6 +330,7 @@ endfunction
 function! CountJump#Mapping( Function, arguments ) abort
     try
 	call call(a:Function, a:arguments)
+	return 1
     catch /^CountJump:/
 	call ingo#err#SetCustomException('CountJump')
 	return 0
