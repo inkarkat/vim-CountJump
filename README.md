@@ -202,8 +202,8 @@ To uninstall, use the :RmVimball command.
 ### DEPENDENCIES
 
 - Requires Vim 7.0 or higher.
-- ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.019 or higher
-  (optional).
+- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.041 or
+  higher.
 
 INTEGRATION
 ------------------------------------------------------------------------------
@@ -274,6 +274,10 @@ HISTORY
   exception thrown (from a client-supplied Funcref).
 - ENH: Allow client-supplied Funcrefs to throw a "CountJump: &lt;error text&gt;"
   exception to issue custom errors.
+- Prevent a custom text object from clobbering the register passed to a custom
+  operator (as :omaps defined by this plugin).
+
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.041!__
 
 ##### 1.90    11-Feb-2018
 - Rename g:CountJump\_Context to g:CountJump\_MotionContext, to avoid a clash

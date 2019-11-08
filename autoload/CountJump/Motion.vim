@@ -119,10 +119,11 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
     for l:mode in l:mapModes
 	for l:data in l:dataset
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#Mapping('CountJump#CountJumpWithWrapMessage', %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
+	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#%sMapping('CountJump#CountJumpWithWrapMessage', %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
 	    \       (l:mode ==# 'v' ? 'x' : l:mode),
 	    \       a:mapArgs,
 	    \       l:data[1],
+	    \       (l:mode ==# 'o' ? 'O' : ''),
 	    \       ingo#escape#command#mapescape(string([
 	    \           (l:data[0] && a:isEndPatternToEnd ? toupper(l:mode) : l:mode),
 	    \           l:searchName,
@@ -236,10 +237,11 @@ function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfter
     for l:mode in l:mapModes
 	for l:data in l:dataset
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#Mapping(%s, %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
+	    \   printf('%snoremap <silent> %s %s :<C-u>if ! CountJump#%sMapping(%s, %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>',
 	    \       (l:mode ==# 'v' ? 'x' : l:mode),
 	    \       a:mapArgs,
 	    \       l:data[1],
+	    \       (l:mode ==# 'o' ? 'O' : ''),
 	    \       string(l:data[2]),
 	    \       string([
 	    \           (l:data[0] && a:isEndJumpToEnd ? toupper(l:mode) : l:mode)

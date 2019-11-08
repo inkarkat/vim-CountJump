@@ -341,5 +341,8 @@ function! CountJump#Mapping( Function, arguments ) abort
 	return 0
     endtry
 endfunction
+function! CountJump#OMapping( Function, arguments  ) abort
+    return ingo#register#pending#ExecuteOrFunc(function('CountJump#Mapping'), a:Function, a:arguments)
+endfunction
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

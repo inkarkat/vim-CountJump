@@ -358,10 +358,11 @@ function! CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, ty
 	endif
 	for l:mode in ['o', 'v']
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#Mapping('CountJump#TextObject#TextObjectWithJumpFunctions', %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
+	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#%sMapping('CountJump#TextObject#TextObjectWithJumpFunctions', %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
 	    \       (l:mode ==# 'v' ? 'x' : l:mode),
 	    \       a:mapArgs,
 	    \       CountJump#Mappings#MakeTextObjectKey(tolower(l:type), a:textObjectKey),
+	    \       (l:mode ==# 'o' ? 'O' : ''),
 	    \       string([
 	    \           l:mode,
 	    \           l:isInner,

@@ -127,10 +127,11 @@ function! CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, i
 	for l:data in l:dataset
 	    let l:useToEndOfLine = (l:mode ==# 'n' ? 0 : l:data[3])
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#Mapping('CountJump#JumpFunc', %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
+	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#%sMapping('CountJump#JumpFunc', %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
 	    \       (l:mode ==# 'v' ? 'x' : l:mode),
 	    \       a:mapArgs,
 	    \       l:data[0],
+	    \       (l:mode ==# 'o' ? 'O' : ''),
 	    \       ingo#escape#command#mapescape(string([
 	    \           (l:mode ==# 'o' && l:useToEndOfLine ? 'O' : l:mode),
 	    \           'CountJump#Region#JumpToNextRegion',
