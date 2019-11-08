@@ -1,9 +1,7 @@
 " CountJump.vim: Move to a buffer position via repeated jumps (or searches).
 "
 " DEPENDENCIES:
-"   - ingo/msg.vim autoload script
-"   - ingo/pos.vim autoload script
-"   - ingo/motion/helper.vim autoload script (optional)
+"   - ingo-library.vim plugin
 "
 " Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.

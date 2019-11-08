@@ -1,29 +1,13 @@
 " CountJump/Region/TextObject.vim: Create custom text objects via jumps over matching lines.
 "
 " DEPENDENCIES:
-"   - CountJump/Mappings.vim, CountJump/Region.vim, CountJump/TextObjects.vim autoload scripts
 "
-" Copyright: (C) 2010-2017 Ingo Karkat
+" Copyright: (C) 2010-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   1.84.005	24-Apr-2014	FIX: There are no buffer-local functions with a
-"				b: scope prefix, and Vim 7.4.264 disallows those
-"				invalid function names now. Previously, multiple
-"				buffer-local text objects with the same key
-"				would override each other. Instead, make the
-"				functions created by
-"				CountJump#Region#TextObject#Make() buffer-scoped
-"				by prefixing "s:B" and the buffer number.
-"   1.83.004	14-Jun-2013	Minor: Make substitute() robust against
-"				'ignorecase'.
-"   1.60.003	27-Mar-2012	ENH: When keys start with <Plug>, insert Inner /
-"				Outer instead of prepending i / a.
-"   1.50.002	30-Aug-2011	Also support a match()-like Funcref instead of a
-"				pattern to define the range.
-"   1.40.001	20-Dec-2010	file creation
+let s:save_cpo = &cpo
+set cpo&vim
 
 function! s:EscapeForFunctionName( text )
     " Convert all non-alphabetical characters to their hex value to create a
@@ -142,4 +126,6 @@ function! CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selec
     return CountJump#TextObject#MakeWithJumpFunctions(a:mapArgs, a:textObjectKey, l:types, a:selectionMode, s:function(l:functionToBeginName), s:function(l:functionToEndName))
 endfunction
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

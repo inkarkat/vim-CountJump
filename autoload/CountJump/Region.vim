@@ -2,85 +2,10 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2010-2017 Ingo Karkat
+" Copyright: (C) 2010-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   1.90.011	22-Jul-2017	Rename g:CountJump_Context to
-"				g:CountJump_MotionContext, to avoid a clash with
-"				the text object in
-"				CountJump#TextObject#TextObjectWithJumpFunctions().
-"				Clear g:CountJump_MotionContext at the end of
-"				the function.
-"				Support non-argument Funcref for a:Expr that
-"				gets evaluated once at the beginning, and should
-"				yield a regular expression that is then used in
-"				its stead. We cannot handle this in
-"				s:SearchInLineMatching(); it gets invoked many
-"				times. Add s:TryEvaluateExpr() that also handles
-"				the double invocation by an outer text object.
-"				Invoke it at the start of both region search
-"				functions: CountJump#Region#SearchForRegionEnd()
-"				and CountJump#Region#SearchForNextRegion().
-"   1.50.010	30-Aug-2011	Also support a match()-like Funcref instead of a
-"				pattern to define the range.
-"				Initialize global g:CountJump_Context object for
-"				custom use by Funcrefs.
-"   1.41.009	13-Jun-2011	FIX: Directly ring the bell to avoid problems
-"				when running under :silent!.
-"   1.40.008	20-Dec-2010	Jump functions again return position (and
-"				actual, corrected one for a:isToEndOfLine).
-"				Though the position is not used for motions, it
-"				is necessary for text objects to differentiate
-"				between "already at the begin/end position" and
-"				"no such position".
-"   1.30.007	19-Dec-2010	Shuffling of responsibilities in
-"				CountJump#JumpFunc():
-"				CountJump#Region#JumpToRegionEnd() and
-"				CountJump#Region#JumpToNextRegion() now need to
-"				beep themselves if no match is found, but do not
-"				return the position any more.
-"				Added a:isToEndOfLine argument to
-"				CountJump#Region#JumpToRegionEnd() and
-"				CountJump#Region#JumpToNextRegion(), which is
-"				useful for operator-pending and characterwise
-"				visual mode mappings; the entire last line will
-"				then be operated on / selected.
-"   1.30.006	18-Dec-2010	Moved CountJump#Region#Jump() to CountJump.vim
-"				as CountJump#JumpFunc(). It fits there much
-"				better because of the similarity to
-"				CountJump#CountJump(), and actually has nothing
-"				to do with regions.
-"   1.30.005	18-Dec-2010	ENH: Added a:isMatch argument to
-"				CountJump#Region#SearchForRegionEnd(),
-"				CountJump#Region#JumpToRegionEnd(),
-"				CountJump#Region#SearchForNextRegion(),
-"				CountJump#Region#JumpToNextRegion(). This allows
-"				definition of regions via non-matches, which can
-"				be substantially simpler (and faster to match)
-"				than coming up with a "negative" regular
-"				expression.
-"   1.21.004	03-Aug-2010	FIX: A 2]] jump inside a region (unless last
-"				line) jumped like a 1]] jump. The search for
-"				next region must not decrease the iteration
-"				counter when _not_ searching _across_ the
-"				region.
-"   1.20.003	30-Jul-2010	FIX: Removed setting of cursor position.
-"				FIX: CountJump#Region#Jump() with mode "O"
-"				didn't add original position to jump list.
-"				Simplified conditional.
-"   1.20.002	29-Jul-2010	FIX: Non-match in s:SearchInLineMatching()
-"				returned 0; now returning 1.
-"				FIX: Must decrement count after having searched
-"				for the end of the region at the cursor
-"				position.
-"				Split cursor movement from
-"				CountJump#Region#SearchForRegionEnd() and
-"				CountJump#Region#SearchForNextRegion() into
-"				separate #JumpTo...() functions.
-"	001	21-Jul-2010	file creation
 
 function! s:DoJump( position, isToEndOfLine )
     if a:position == [0, 0]

@@ -1,15 +1,12 @@
 " CountJump/Motion.vim: Create custom motions via repeated jumps (or searches).
 "
 " DEPENDENCIES:
-"   - CountJump.vim, CountJump/Mappings.vim autoload scripts.
-"   - ingo/escape/command.vim autoload script
-"   - ingo/msg.vim autoload script
+"   - ingo-library.vim plugin
 "
 " Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-
 let s:save_cpo = &cpo
 set cpo&vim
 
