@@ -1,34 +1,14 @@
-" CountJump/Region/Motion.vim: Create custom motions via jumps over matching
-" lines.
+" CountJump/Region/Motion.vim: Create custom motions via jumps over matching lines.
 "
 " DEPENDENCIES:
-"   - CountJump.vim, CountJump/Mappings.vim, CountJump/Region.vim autoload scripts.
-"   - ingo/escape/command.vim autoload script
+"   - ingo-library.vim plugin
 "
-" Copyright: (C) 2010-2017 Ingo Karkat
+" Copyright: (C) 2010-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   1.86.006	16-Mar-2017	CountJump#Region#Motion#MakeBracketMotion():
-"				Catch all exceptions and report only the text.
-"   1.86.005	06-Mar-2015	CountJump#Region#Motion#MakeBracketMotion(): The
-"				a:Expr argument may contain special characters
-"				that need escaping in a map. Use
-"				ingo#escape#command#mapescape().
-"   1.60.004	27-Mar-2012	ENH: When keys start with <Plug>, insert Forward
-"				/ Backward instead of prepending [ / ].
-"   1.50.003	30-Aug-2011	Also support a match()-like Funcref instead of a
-"				pattern to define the range.
-"   1.30.002	19-Dec-2010	Added a:isToEndOfLine argument to
-"				CountJump#Region#JumpToNextRegion(), to be used
-"				in operator-pending and visual modes in order to
-"				jump to the end of the matching line (for the ][
-"				motion only). In that case, also using special
-"				'O' mode argument for CountJump#JumpFunc() to
-"				include the last character, too.
-"	001	18-Dec-2010	file creation
+let s:save_cpo = &cpo
+set cpo&vim
 
 "			Move around ???
 "]x, ]]			Go to [count] next start of ???.
@@ -127,20 +107,26 @@ function! CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, i
 	for l:data in l:dataset
 	    let l:useToEndOfLine = (l:mode ==# 'n' ? 0 : l:data[3])
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-u>try<Bar>call CountJump#JumpFunc(%s, 'CountJump#Region#JumpToNextRegion', %s, %d, %d, %d, %d)<Bar>catch<Bar>if v:exception !~# '^\\%(Vim:\\)\\?Interrupt$'<Bar>echoerr ingo#msg#MsgFromVimException()<Bar>endif<Bar>endtry<CR>",
-	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
-	    \	    a:mapArgs,
-	    \	    l:data[0],
-	    \	    string(l:mode ==# 'o' && l:useToEndOfLine ? 'O' : l:mode),
-	    \	    ingo#escape#command#mapescape(string(a:Expr)),
-	    \	    a:isMatch,
-	    \	    l:data[1],
-	    \	    l:data[2],
-	    \	    l:useToEndOfLine
+	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#%sMapping('CountJump#JumpFunc', %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
+	    \       (l:mode ==# 'v' ? 'x' : l:mode),
+	    \       a:mapArgs,
+	    \       l:data[0],
+	    \       (l:mode ==# 'o' ? 'O' : ''),
+	    \       ingo#escape#command#mapescape(string([
+	    \           (l:mode ==# 'o' && l:useToEndOfLine ? 'O' : l:mode),
+	    \           'CountJump#Region#JumpToNextRegion',
+	    \           a:Expr,
+	    \           a:isMatch,
+	    \           l:data[1],
+	    \           l:data[2],
+	    \           l:useToEndOfLine
+	    \       ]))
 	    \   ), '|'
 	    \)
 	endfor
     endfor
 endfunction
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

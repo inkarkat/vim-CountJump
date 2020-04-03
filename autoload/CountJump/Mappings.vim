@@ -2,15 +2,10 @@
 "
 " DEPENDENCIES:
 "
-" Copyright: (C) 2012-2013 Ingo Karkat
+" Copyright: (C) 2012-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   1.83.002	14-Jun-2013	Minor: Make substitute() robust against
-"				'ignorecase'.
-"   1.60.001	27-Mar-2012	file creation
 let s:save_cpo = &cpo
 set cpo&vim
 

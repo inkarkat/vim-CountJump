@@ -1,115 +1,19 @@
 " CountJump.vim: Move to a buffer position via repeated jumps (or searches).
 "
 " DEPENDENCIES:
-"   - ingo/msg.vim autoload script
-"   - ingo/pos.vim autoload script
-"   - ingo/motion/helper.vim autoload script (optional)
+"   - ingo-library.vim plugin
 "
-" Copyright: (C) 2009-2015 Ingo Karkat
+" Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   1.86.023	06-Mar-2015	Retire duplicated fallback for
-"				ingo#motion#helper#AdditionalMovement(); since
-"				version 1.85, the ingo-library is now a
-"				mandatory dependency.
-"   1.85.022	12-Jun-2014	Make test for 'virtualedit' option values also
-"				account for multiple values.
-"   1.85.021	05-May-2014	Use ingo#msg#WarningMsg().
-"   1.85.020	30-Apr-2014	Use ingo/pos.vim.
-"   1.83.019	11-Jan-2014	Factor out special treatment for visual and
-"				operator-pending motions to
-"				ingo#motion#helper#AdditionalMovement(), but
-"				keep internal fallback to keep the dependency to
-"				ingo-library optional.
-"   1.83.018	14-Jun-2013	Minor: Make substitute() robust against
-"				'ignorecase'.
-"				FIX: Need to save v:count1 before issuing the
-"				normal mode "gv" command.
-"   1.81.017	15-Oct-2012	BUG: Wrong variable scope for copied
-"				a:isBackward in
-"				CountJump#CountSearchWithWrapMessage().
-"   1.80.016	18-Sep-2012	Clear any previous wrap message when wrapping is
-"				enabled; it's confusing otherwise.
-"   1.80.015	17-Sep-2012	FIX: Visual end pattern / jump to end with
-"				'selection' set to "exclusive" also requires the
-"				special additional treatment of moving one
-"				right, like operator-pending mode.
-"   1.80.014	15-Sep-2012	Also handle move to the buffer's very last
-"				character in operator-pending mode with a
-"				pattern to end "O" motion by temporarily setting
-"				'virtualedit' to "onemore".
-"				Add CountJump#CountJumpFuncWithWrapMessage() /
-"				CountJump#CountJumpFunc() to help implement
-"				custom motions with only a simple function that
-"				performs a single jump. (Used by the
-"				SameSyntaxMotion plugin.)
-"   1.70.013	17-Aug-2012	ENH: Check for searches wrapping around the
-"				buffer and issue a corresponding warning, like
-"				the built-in searches do. Though the mappings
-"				that can be made with CountJump currently do not
-"				use 'wrapscan', other plugins that define their
-"				own jump functions and use the
-"				CountJump#CountJump() function for it may use
-"				it. Create function overloads
-"				CountJump#CountJumpWithWrapMessage() and
-"				CountJump#CountSearchWithWrapMessage().
-"   1.41.012	13-Jun-2011	FIX: Directly ring the bell to avoid problems
-"				when running under :silent!.
-"   1.30.011	19-Dec-2010	Removed return value of jump position from
-"				CountJump#CountJump() and CountJump#JumpFunc();
-"				it isn't needed, as these functions are
-"				typically used directly in motion mappings.
-"				CountJump#JumpFunc() now uses cursor position
-"				after invoking jump function, and doesn't
-"				require a returned position any more. This is
-"				only a special case for CountJump#TextObject,
-"				and should not be generally required of a jump
-"				function. The jump function is now also expected
-"				to beep, so removed that here.
-"   1.30.010	18-Dec-2010	Moved CountJump#Region#Jump() here as
-"				CountJump#JumpFunc(). It fits here much better
-"				because of the similarity to
-"				CountJump#CountJump(), and actually has nothing
-"				to do with regions.
-"   1.20.009	30-Jul-2010	FIX: CountJump#CountJump() with mode "O" didn't
-"				add original position to jump list. Simplified
-"				conditional.
-"   1.10.008	15-Jul-2010	Changed behavior if there aren't [count]
-"				matches: Instead of jumping to the last
-"				available match (and ringing the bell), the
-"				cursor stays at the original position, like with
-"				the old vi-compatible motions.
-"				ENH: Only adding to jump list if there actually
-"				is a match. This is like the built-in Vim
-"				motions work.
-"   1.00.007	22-Jun-2010	Added special mode 'O' for
-"				CountJump#CountJump() with special correction
-"				for a pattern to end in operator-pending mode.
-"				Reviewed for use in operator-pending mode.
-"	006	03-Oct-2009	Now returning [lnum, col] like searchpos(), not
-"				just line number.
-"	005	02-Oct-2009	CountJump#CountSearch() now handles 'c' search()
-"				flag; it is cleared on subsequent iterations to
-"				avoid staying put at the current match.
-"	004	14-Feb-2009	Renamed from 'custommotion.vim' to
-"				'CountJump.vim' and split off motion and
-"				text object parts.
-"	003	13-Feb-2009	Added functionality to create inner/outer text
-"				objects delimited by the same begin and end
-"				patterns.
-"	002	13-Feb-2009	Now also allowing end match for the
-"				patternToEnd.
-"	001	12-Feb-2009	file creation
 
 function! s:WrapMessage( searchName, isBackward )
     if &shortmess !~# 's'
 	call ingo#msg#WarningMsg(a:searchName . ' ' . (a:isBackward ? 'hit TOP, continuing at BOTTOM' : 'hit BOTTOM, continuing at TOP'))
     endif
 endfunction
-function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArguments )
+function! CountJump#CountSearchWithWrapMessage( count, searchName, SearchArguments )
 "*******************************************************************************
 "* PURPOSE:
 "   Search for the a:count'th occurrence of the passed search() pattern and
@@ -127,15 +31,20 @@ function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArgumen
 "   a:searchName    Object to be searched; used as the subject in the message
 "		    when the search wraps: "a:searchName hit BOTTOM, continuing
 "		    at TOP". When empty, no wrap message is issued.
-"   a:searchArguments	Arguments to search() as a List [{pattern}, {flags}, ...]
+"   a:SearchArguments	Arguments to search() as a List [{pattern}, {flags}, ...]
+"			Or Funcref to a function that takes no arguments and
+"			returns the search arguments (as a List).
+"                       First search argument (pattern) may also be a Funcref
+"                       that takes no arguments and returns the pattern.
 "
 "* RETURN VALUES:
 "   List with the line and column position, or [0, 0], like searchpos().
 "*******************************************************************************
     let l:save_view = winsaveview()
-    let l:searchArguments = copy(a:searchArguments)
+    let l:searchArguments = (type(a:SearchArguments) == 2 ? call(a:SearchArguments, []) : copy(a:SearchArguments))
+    if type(l:searchArguments[0]) == 2 | let l:searchArguments[0] = call(l:searchArguments[0], []) | endif
     let l:isWrapped = 0
-    let l:isBackward = (get(a:searchArguments, 1, '') =~# 'b')
+    let l:isBackward = (get(l:searchArguments, 1, '') =~# 'b')
     let [l:prevLine, l:prevCol] = [line('.'), col('.')]
 
     for l:i in range(1, a:count)
@@ -193,10 +102,10 @@ function! CountJump#CountSearchWithWrapMessage( count, searchName, searchArgumen
 
     return l:matchPosition
 endfunction
-function! CountJump#CountSearch( count, searchArguments )
-    return CountJump#CountSearchWithWrapMessage(a:count, '', a:searchArguments)
+function! CountJump#CountSearch( count, SearchArguments )
+    return CountJump#CountSearchWithWrapMessage(a:count, '', a:SearchArguments)
 endfunction
-function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
+function! CountJump#CountCountJumpWithWrapMessage( count, mode, searchName, ... )
 "*******************************************************************************
 "* PURPOSE:
 "   Implement a custom motion by jumping to the <count>th occurrence of the
@@ -211,6 +120,7 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 "   If the pattern doesn't match (a:count times), a beep is emitted.
 "
 "* INPUTS:
+"   a:count Which match should be jumped to.
 "   a:mode  Mode in which the search is invoked. Either 'n', 'v' or 'o'.
 "	    Uppercase letters indicate special additional treatment for end
 "	    patterns to end.
@@ -218,12 +128,16 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 "		    when the search wraps: "a:searchName hit BOTTOM, continuing
 "		    at TOP". When empty, no wrap message is issued.
 "   ...	    Arguments to search().
+"           Or Funcref to a function that takes no arguments and returns the
+"           search arguments (as a List).
+"           First search argument (pattern) may also be a Funcref that takes no
+"           arguments and returns the pattern.
 "
 "* RETURN VALUES:
 "   None.
 "*******************************************************************************
     let l:save_view = winsaveview()
-    let l:count = v:count1
+    let l:count = a:count
 
     if a:mode ==? 'v'
 	normal! gv
@@ -241,6 +155,9 @@ function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
 	    call ingo#motion#helper#AdditionalMovement(a:mode ==# 'O')
 	endif
     endif
+endfunction
+function! CountJump#CountJumpWithWrapMessage( mode, searchName, ... )
+    return call('CountJump#CountCountJumpWithWrapMessage', [v:count1, a:mode, a:searchName] + a:000)
 endfunction
 function! CountJump#CountJump( mode, ... )
     " See CountJump#CountJumpWithWrapMessage().
@@ -407,6 +324,23 @@ endfunction
 function! CountJump#CountJumpFunc( count, SingleJumpFunc, ... )
     " See CountJump#CountJumpFuncWithWrapMessage().
     return call('CountJump#CountJumpFuncWithWrapMessage', [a:count, '', 0, a:SingleJumpFunc] + a:000)
+endfunction
+function! CountJump#Mapping( Function, arguments ) abort
+    try
+	call call(a:Function, a:arguments)
+	return 1
+    catch /^CountJump:/
+	call ingo#err#SetCustomException('CountJump')
+	return 0
+    catch '^\%(Vim:\)\?Interrupt$'
+	return 1
+    catch
+	call ingo#err#SetVimException()
+	return 0
+    endtry
+endfunction
+function! CountJump#OMapping( Function, arguments  ) abort
+    return ingo#register#pending#ExecuteOrFunc(function('CountJump#Mapping'), a:Function, a:arguments)
 endfunction
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

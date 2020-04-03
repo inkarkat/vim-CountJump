@@ -41,34 +41,40 @@ The following ftplugins use this plugin:
 
 - |diff_movement.vim| (vimscript #3180):
   Movement over diff hunks with ]] etc.
+- |diffwindow_movement.vim| (vimscript #3719):
+  Movement over changes in a diff window.
+- |dosbatch_movement.vim| (vimscript #4004):
+  Movement over MSDOS batch file functions / labels with ]m etc.
 - |fortunes_movement.vim| (vimscript #3181):
   Movement over email fortunes with ]] etc.
 - |help_movement.vim| (vimscript #3179):
   Movement over Vim help sections with ]] etc.
 - |mail_movement.vim| (vimscript #3182):
   Movement over email quotes with ]] etc.
-- |diffwindow_movement.vim| (vimscript #3719):
-  Movement over changes in a diff window.
-- |JumpToTrailingWhitespace.vim| (vimscript #3968):
-  Motions to locate unwanted whitespace at the end of lines.
-- |TaskMotion.vim| (vimscript #3990):
-  Motions to task and TODO markers.
-- |ConflictMotions.vim| (vimscript #3991):
-  Motions to and inside SCM conflict markers.
-- |vim_movement.vim| (vimscript #4002):
-  Movement over Vim functions with ]m etc.
 - |vbs_movement.vim| (vimscript #4003):
   Movement over VBScript classes / functions / properties / subs with ]m etc.
-- |dosbatch_movement.vim| (vimscript #4004):
-  Movement over MSDOS batch file functions / labels with ]m etc.
-- |SameSyntaxMotion.vim| (vimscript #4338):
-  Motions to the borders of the same syntax highlighting.
-- |JumpToVerticalBlock.vim| (vimscript #0000):
+- |vim_movement.vim| (vimscript #4002):
+  Movement over Vim functions with ]m etc.
+
+The following plugins offer new motions through this plugin:
+
+- |ConflictMotions.vim| (vimscript #3991):
+  Motions to and inside SCM conflict markers.
+- |ErrorMotion.vim| (vimscript #0000):
+  Motions to text highlighted as error.
+- |JumpToNextTag.vim| (vimscript #0000):
+  Motions to the next definition or occurrence of a tag inside the current
+  buffer.
+- |JumpToTrailingWhitespace.vim| (vimscript #3968):
+  Motions to locate unwanted whitespace at the end of lines.
+- |JumpToVerticalBlock.vim| (vimscript #5657):
   Like W / E, but vertically in the same column.
 - |JumpToVerticalOccurrence.vim| (vimscript #4841):
   Like f{char}, but searching the same screen column, not line.
-- |ErrorMotion.vim| (vimscript #0000):
-  Motions to text highlighted as error.
+- |SameSyntaxMotion.vim| (vimscript #4338):
+  Motions to the borders of the same syntax highlighting.
+- |TaskMotion.vim| (vimscript #3990):
+  Motions to task and TODO markers.
 
 RELATED WORKS								     *
 
@@ -86,7 +92,7 @@ USAGE							      *CountJump-usage*
 The plugin defines several functions, which set up the appropriate mappings
 based on the arguments that you supply. The following is an overview; you'll
 find the details directly in the implementation files in the
-.vim/autoload/CountJump/ directory.
+autoload/CountJump/ directory.
 
 CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, patternToBegin, patternToEnd, isEndPatternToEnd, ... )
 
@@ -214,8 +220,8 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES					       *CountJump-dependencies*
 
 - Requires Vim 7.0 or higher.
-- |ingo-library.vim| plugin (vimscript #4433), version 1.019 or higher
-  (optional).
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.041 or
+  higher.
 
 ==============================================================================
 INTEGRATION						*CountJump-integration*
@@ -278,6 +284,20 @@ https://github.com/inkarkat/vim-CountJump/issues or email (address below).
 
 ==============================================================================
 HISTORY							    *CountJump-history*
+
+1.91	03-Apr-2020
+- ENH: Allow Funcref for a:searchArguments / first search argument /
+  a:patternTo{Begin,End}
+- ENH: Allow to influence given [count] via
+  CountJump#CountCountJumpWithWrapMessage() variant of
+  CountJump#CountJumpWithWrapMessage().
+- FIX: Avoid "Error detected while processing :" additional line above an
+  exception thrown (from a client-supplied Funcref).
+- ENH: Allow client-supplied Funcrefs to throw a "CountJump: <error text>"
+  exception to issue custom errors.
+- Prevent a custom text object from clobbering the register passed to a custom
+  operator (as :omaps defined by this plugin).
+  *** You need to update to ingo-library (vimscript #4433) version 1.041! ***
 
 1.90	11-Feb-2018
 - Rename g:CountJump_Context to g:CountJump_MotionContext, to avoid a clash
@@ -477,7 +497,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2009-2018 Ingo Karkat
+Copyright: (C) 2009-2020 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

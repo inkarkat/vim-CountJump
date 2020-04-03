@@ -1,91 +1,12 @@
 " CountJump/Motion.vim: Create custom motions via repeated jumps (or searches).
 "
 " DEPENDENCIES:
-"   - CountJump.vim, CountJump/Mappings.vim autoload scripts.
-"   - ingo/escape/command.vim autoload script
-"   - ingo/msg.vim autoload script
+"   - ingo-library.vim plugin
 "
-" Copyright: (C) 2009-2017 Ingo Karkat
+" Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   1.86.012	16-Mar-2017	CountJump#Motion#MakeBracketMotionWithJumpFunctions():
-"				Catch all exceptions and report only the text.
-"				My ErrorMotion.vim plugin could be slow to find
-"				the next error if there is none. Aborting with
-"				<C-c> would print a long multi-line exception:
-"				"Error detected while processing function
-"				ErrorMotion#Forward[1]..CountJump#JumpFunc[39]..HlgroupMotion#JumpWithWrapMessage[26]..CountJump#CountJumpFuncWithWrapMessage[35]..HlgroupMotion#SearchFirstHlgroup:
-"				line   67: Interrupted". As we apparently cannot
-"				avoid the printing of "Type :quit<Enter>  to
-"				exit Vim", suppress the Vim:Interrupt exception,
-"				and :echoerr all others.
-"   1.86.011	06-Mar-2015	CountJump#Motion#MakeBracketMotion(): The
-"				a:patternToBegin, a:patternToEnd, a:searchName
-"				arguments may contain special characters that
-"				need escaping in a map. Use
-"				ingo#escape#command#mapescape().
-"   1.83.010	02-Jan-2014	Use more canonical way of invoking the Funcrefs
-"				in
-"				CountJump#Motion#MakeBracketMotionWithJumpFunctions();
-"				this will then also work with passed String
-"				function names.
-"   1.81.009	16-Oct-2012	ENH: Add optional a:searchName argument to
-"				CountJump#Motion#MakeBracketMotion() to make
-"				searches wrap around when 'wrapscan' is set.
-"				Custom jump functions can do this since version
-"				1.70; now, this can also be utilized by motions
-"				defined via a search pattern.
-"   1.80.008	17-Sep-2012	FIX: Visual end pattern / jump to end with
-"				'selection' set to "exclusive" also requires the
-"				special additional treatment of moving one
-"				right, like operator-pending mode. Always (for
-"				all modes) pass uppercase a:mode in those cases,
-"				not just for operator-pending mode.
-"				BUG: Operator-pending motion with end pattern /
-"				jump to end operates on one character too few
-"				when moving to begin; must not pass uppercase
-"				a:mode in the motions to begin. Add begin / end
-"				flag to the datasets.
-"   1.60.007	27-Mar-2012	ENH: When keys start with <Plug>, insert Forward
-"				/ Backward instead of prepending [ / ].
-"   1.30.006	19-Dec-2010	Clarified interface of jump function arguments;
-"				no need to return jump position here.
-"   1.22.005	06-Aug-2010	No more motion mappings for select mode; as the
-"				mappings start with a printable character, no
-"				select-mode mapping should be defined.
-"   1.20.004	30-Jul-2010	ENH: a:keyAfterBracket and
-"				a:inverseKeyAfterBracket can now be empty, the
-"				resulting mappings are then omitted.
-"				Likewise, any jump function can be empty in
-"				CountJump#Motion#MakeBracketMotionWithJumpFunctions().
-"   1.20.003	21-Jul-2010	With the added
-"				CountJump#Motion#MakeBracketMotionWithJumpFunctions()
-"				motions can be defined via jump functions,
-"				similar to how text objects can be defined. This
-"				is a generalization of
-"				CountJump#Motion#MakeBracketMotion(), but the
-"				latter isn't now implemented through the
-"				generalization to avoid overhead and because the
-"				similarities are not as strong as with the text
-"				objects.
-"   1.00.002	22-Jun-2010	Added missing :omaps for operator-pending mode.
-"				Replaced s:Escape() with string() and simplified
-"				building of l:dataset.
-"				Added special mode 'O' to indicate
-"				operator-pending mapping with
-"				a:isEndPatternToEnd.
-"				Allowing to specify map modes via optional
-"				argument to CountJump#Motion#MakeBracketMotion()
-"				to allow to skip or use different patterns for
-"				some modes.
-"	001	14-Feb-2009	Renamed from 'custommotion.vim' to
-"				'CountJump.vim' and split off motion and
-"				text object parts.
-"				file creation
-
 let s:save_cpo = &cpo
 set cpo&vim
 
@@ -98,7 +19,7 @@ set cpo&vim
 " This mapping scheme is extracted from $VIMRUNTIME/ftplugin/vim.vim. It
 " enhances the original mappings so that a [count] can be specified, and folds
 " at the found search position are opened.
-function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, patternToBegin, patternToEnd, isEndPatternToEnd, ... )
+function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, PatternToBegin, PatternToEnd, isEndPatternToEnd, ... )
 "*******************************************************************************
 "* PURPOSE:
 "   Define a complete set of mappings for a [x / ]x motion (e.g. like the
@@ -138,8 +59,12 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 "   default [[ and ]] mappings are overwritten. (Note that this is different
 "   from passing ']' and '[', respectively, because the back motions are
 "   swapped.)
-"   a:patternToBegin	Search pattern to locate the beginning of a block.
-"   a:patternToEnd	Search pattern to locate the end of a block.
+"   a:PatternToBegin	Search pattern to locate the beginning of a block.
+"			Or Funcref to a function that takes no arguments and
+"			returns the search arguments (as a List).
+"   a:PatternToEnd	Search pattern to locate the end of a block.
+"			Or Funcref to a function that takes no arguments and
+"			returns the search arguments (as a List).
 "   a:isEndPatternToEnd	Flag that specifies whether a jump to the end of a block
 "			will be to the end of the match. This makes it easier to
 "			write an end pattern for characterwise motions (like
@@ -172,33 +97,36 @@ function! CountJump#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseK
 
     if empty(a:keyAfterBracket) && empty(a:inverseKeyAfterBracket)
 	let l:dataset = [
-	\   [ 0, '[[', a:patternToBegin, 'b' . l:wrapFlag ],
-	\   [ 0, ']]', a:patternToBegin, ''  . l:wrapFlag ],
-	\   [ 1, '[]', a:patternToEnd,   'b' . l:wrapFlag . l:endMatch ],
-	\   [ 1, '][', a:patternToEnd,   ''  . l:wrapFlag . l:endMatch ],
+	\   [ 0, '[[', a:PatternToBegin, 'b' . l:wrapFlag ],
+	\   [ 0, ']]', a:PatternToBegin, ''  . l:wrapFlag ],
+	\   [ 1, '[]', a:PatternToEnd,   'b' . l:wrapFlag . l:endMatch ],
+	\   [ 1, '][', a:PatternToEnd,   ''  . l:wrapFlag . l:endMatch ],
 	\]
     else
 	let l:dataset = []
 	if ! empty(a:keyAfterBracket)
-	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(0, a:keyAfterBracket), a:patternToBegin, 'b' . l:wrapFlag ])
-	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(1, a:keyAfterBracket), a:patternToBegin, ''  . l:wrapFlag ])
+	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(0, a:keyAfterBracket), a:PatternToBegin, 'b' . l:wrapFlag ])
+	    call add(l:dataset, [ 0, CountJump#Mappings#MakeMotionKey(1, a:keyAfterBracket), a:PatternToBegin, ''  . l:wrapFlag ])
 	endif
 	if ! empty(a:inverseKeyAfterBracket)
-	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(0, a:inverseKeyAfterBracket), a:patternToEnd, 'b' . l:wrapFlag . l:endMatch ])
-	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(1, a:inverseKeyAfterBracket), a:patternToEnd, ''  . l:wrapFlag . l:endMatch ])
+	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(0, a:inverseKeyAfterBracket), a:PatternToEnd, 'b' . l:wrapFlag . l:endMatch ])
+	    call add(l:dataset, [ 1, CountJump#Mappings#MakeMotionKey(1, a:inverseKeyAfterBracket), a:PatternToEnd, ''  . l:wrapFlag . l:endMatch ])
 	endif
     endif
     for l:mode in l:mapModes
 	for l:data in l:dataset
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-U>call CountJump#CountJumpWithWrapMessage(%s, %s, %s, %s)<CR>",
-	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
-	    \	    a:mapArgs,
-	    \	    l:data[1],
-	    \	    string(l:data[0] && a:isEndPatternToEnd ? toupper(l:mode) : l:mode),
-	    \       string(ingo#escape#command#mapescape(l:searchName)),
-	    \	    string(ingo#escape#command#mapescape(l:data[2])),
-	    \	    string(ingo#escape#command#mapescape(l:data[3]))
+	    \   printf("%snoremap <silent> %s %s :<C-u>if ! CountJump#%sMapping('CountJump#CountJumpWithWrapMessage', %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>",
+	    \       (l:mode ==# 'v' ? 'x' : l:mode),
+	    \       a:mapArgs,
+	    \       l:data[1],
+	    \       (l:mode ==# 'o' ? 'O' : ''),
+	    \       ingo#escape#command#mapescape(string([
+	    \           (l:data[0] && a:isEndPatternToEnd ? toupper(l:mode) : l:mode),
+	    \           l:searchName,
+	    \           l:data[2],
+	    \           l:data[3]
+	    \       ]))
 	    \   ), '|'
 	    \)
 	endfor
@@ -306,12 +234,15 @@ function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfter
     for l:mode in l:mapModes
 	for l:data in l:dataset
 	    execute escape(
-	    \   printf("%snoremap <silent> %s %s :<C-u>try<Bar>call call(%s, [%s])<Bar>catch<Bar>if v:exception !~# '^\\%(Vim:\\)\\?Interrupt$'<Bar>echoerr ingo#msg#MsgFromVimException()<Bar>endif<Bar>endtry<CR>",
-	    \	    (l:mode ==# 'v' ? 'x' : l:mode),
-	    \	    a:mapArgs,
-	    \	    l:data[1],
-	    \	    string(l:data[2]),
-	    \	    string(l:data[0] && a:isEndJumpToEnd ? toupper(l:mode) : l:mode)
+	    \   printf('%snoremap <silent> %s %s :<C-u>if ! CountJump#%sMapping(%s, %s)<Bar>echoerr ingo#err#Get()<Bar>endif<CR>',
+	    \       (l:mode ==# 'v' ? 'x' : l:mode),
+	    \       a:mapArgs,
+	    \       l:data[1],
+	    \       (l:mode ==# 'o' ? 'O' : ''),
+	    \       string(l:data[2]),
+	    \       string([
+	    \           (l:data[0] && a:isEndJumpToEnd ? toupper(l:mode) : l:mode)
+	    \       ])
 	    \   ), '|'
 	    \)
 	endfor
